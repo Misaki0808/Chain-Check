@@ -1,0 +1,27 @@
+{
+  "name": "chain-check",
+  "version": "1.0.0",
+  "description": "A project for blockchain programming lesson's final",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Misaki0808/Chain-Check.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Misaki0808/Chain-Check/issues"
+  },
+  "homepage": "https://github.com/Misaki0808/Chain-Check#readme",
+  "devDependencies": {
+    "hardhat": "^3.5.0"
+  },
+  "type": "module"
+}

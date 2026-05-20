@@ -1,0 +1,10 @@
+node_modules
+frontend/node_modules
+artifacts
+cache
+.env
+.env.local
+frontend/dist
+coverage
+npm-debug.log
+.DS_Store
