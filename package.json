@@ -21,7 +21,11 @@
   },
   "homepage": "https://github.com/Misaki0808/Chain-Check#readme",
   "devDependencies": {
-    "hardhat": "^3.5.0"
+    "@nomicfoundation/hardhat-node-test-runner": "^3.0.16",
+    "@nomicfoundation/hardhat-viem": "^3.0.8",
+    "@nomicfoundation/hardhat-viem-assertions": "^3.0.13",
+    "hardhat": "^3.5.0",
+    "viem": "^2.50.4"
   },
   "type": "module"
 }
