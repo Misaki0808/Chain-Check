@@ -1,8 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import WalletConnect from './components/WalletConnect'
+import CreateCheque from './components/CreateCheque'
 import './App.css'
 
 function App() {
+  const [account, setAccount] = useState(null);
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -13,8 +16,14 @@ function App() {
       <main className="app-main">
         <section className="dashboard-section">
           <h2>Dashboard</h2>
-          <WalletConnect />
+          <WalletConnect onAccountChange={setAccount} />
         </section>
+
+        {account && (
+          <section className="dashboard-section" style={{ marginTop: '2rem' }}>
+            <CreateCheque account={account} />
+          </section>
+        )}
       </main>
       
       <footer className="app-footer">

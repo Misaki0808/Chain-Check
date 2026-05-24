@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { CHAIN_ID } from '../config/contract';
 import { formatAddress } from '../utils/formatAddress';
+import { 
+  getContract, 
+  isConfigValid, 
+  CONTRACT_ADDRESS, 
+  INTERMEDIARY_ADDRESS, 
+  CHAIN_ID 
+} from '../utils/contractConnection';
 
-const WalletConnect = () => {
+const WalletConnect = ({ onAccountChange }) => {
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [error, setError] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [contractStatus, setContractStatus] = useState('Bağlanmadı');
 
   // Expected Chain ID from our local deployment
   const TARGET_CHAIN_ID = CHAIN_ID || 31337;
+  const configValid = isConfigValid();
 
   useEffect(() => {
     // Check if MetaMask is already connected
@@ -31,16 +39,52 @@ const WalletConnect = () => {
     };
   }, []);
 
+  const initContract = async (provider, userAddress) => {
+    if (!configValid) {
+      setContractStatus('Config Hatası');
+      return;
+    }
+
+    try {
+      // We only instantiate the contract if the user is connected
+      const signer = await provider.getSigner(userAddress);
+      const contract = getContract(signer);
+      
+      // If we reach here without throwing, we consider the contract connected
+      if (contract.target) {
+        setContractStatus('Hazır (Bağlı)');
+      } else {
+        setContractStatus('Hata');
+      }
+    } catch (err) {
+      console.error("Contract init failed:", err);
+      setContractStatus('Bağlantı Hatası');
+    }
+  };
+
+  const updateAccountState = (userAddress) => {
+    setAccount(userAddress);
+    if (onAccountChange) {
+      onAccountChange(userAddress);
+    }
+  };
+
   const checkConnection = async () => {
     if (window.ethereum) {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.listAccounts();
         if (accounts.length > 0) {
-          setAccount(accounts[0].address);
+          const userAddress = accounts[0].address;
+          updateAccountState(userAddress);
           
           const network = await provider.getNetwork();
           setChainId(Number(network.chainId));
+
+          // Only initialize contract if on correct network
+          if (Number(network.chainId) === TARGET_CHAIN_ID) {
+            await initContract(provider, userAddress);
+          }
         }
       } catch (err) {
         console.error("Connection check failed", err);
@@ -50,17 +94,18 @@ const WalletConnect = () => {
 
   const handleAccountsChanged = (accounts) => {
     if (accounts.length === 0) {
-      setAccount(null);
+      updateAccountState(null);
       setError('');
+      setContractStatus('Bağlanmadı');
     } else {
-      setAccount(accounts[0]);
+      updateAccountState(accounts[0]);
+      // Relying on page reload for full state reset is safer, but we can also re-check here
+      window.location.reload(); 
     }
   };
 
   const handleChainChanged = (newChainId) => {
-    // newChainId is a hex string (e.g. '0x7a69' for 31337)
     setChainId(Number(newChainId));
-    // Reload page as recommended by MetaMask
     window.location.reload();
   };
 
@@ -75,14 +120,19 @@ const WalletConnect = () => {
       setError('');
       
       const provider = new ethers.BrowserProvider(window.ethereum);
-      // Request account access
       const accounts = await provider.send('eth_requestAccounts', []);
       
       if (accounts.length > 0) {
-        setAccount(accounts[0]);
+        const userAddress = accounts[0];
+        updateAccountState(userAddress);
         
         const network = await provider.getNetwork();
-        setChainId(Number(network.chainId));
+        const currentChainId = Number(network.chainId);
+        setChainId(currentChainId);
+
+        if (currentChainId === TARGET_CHAIN_ID) {
+          await initContract(provider, userAddress);
+        }
       }
     } catch (err) {
       if (err.code === 4001) {
@@ -99,6 +149,12 @@ const WalletConnect = () => {
 
   return (
     <div className="wallet-connect-container">
+      {!configValid && (
+        <div className="alert alert-error">
+          Contract deployment bilgisi bulunamadı. Lütfen local deploy scriptini çalıştırın.
+        </div>
+      )}
+
       {error && <div className="alert alert-error">{error}</div>}
       
       {isWrongNetwork && (
@@ -111,7 +167,7 @@ const WalletConnect = () => {
         <button 
           className="btn btn-primary" 
           onClick={connectWallet}
-          disabled={isConnecting}
+          disabled={isConnecting || !configValid}
         >
           {isConnecting ? 'Bağlanıyor...' : 'Cüzdanı Bağla'}
         </button>
@@ -119,9 +175,19 @@ const WalletConnect = () => {
         <div className="wallet-info">
           <span className="status-badge connected">Cüzdan Bağlandı</span>
           <div className="wallet-details">
-            <p><strong>Adres:</strong> {formatAddress(account)}</p>
+            <p><strong>Kullanıcı Adresi:</strong> {formatAddress(account)}</p>
             <p><strong>Ağ ID:</strong> {chainId}</p>
           </div>
+          
+          {/* Contract Connection Layer View */}
+          {configValid && !isWrongNetwork && (
+            <div className="contract-details" style={{ width: '100%', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)'}}>
+              <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Contract Durumu</h4>
+              <p><strong>Contract Adresi:</strong> {formatAddress(CONTRACT_ADDRESS)}</p>
+              <p><strong>Aracı Kurum:</strong> {formatAddress(INTERMEDIARY_ADDRESS)}</p>
+              <p><strong>Bağlantı:</strong> <span className={contractStatus === 'Hazır (Bağlı)' ? 'text-success' : 'text-error'} style={{ fontWeight: 'bold' }}>{contractStatus}</span></p>
+            </div>
+          )}
         </div>
       )}
     </div>
