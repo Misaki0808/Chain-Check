@@ -114,7 +114,11 @@ const ChequeList = ({ account }) => {
 
               {isExpanded && (
                 <div className="cheque-card-expanded">
-                  <ChequeDetail cheque={cheque} />
+                  <ChequeDetail 
+                    cheque={cheque} 
+                    account={account} 
+                    onRefresh={fetchCheques} 
+                  />
                 </div>
               )}
             </div>

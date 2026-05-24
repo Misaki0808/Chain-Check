@@ -1,15 +1,99 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ethers } from 'ethers';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
+import { getContract } from '../utils/contractConnection';
 import StatusBadge from './StatusBadge';
 
-const ChequeDetail = ({ cheque }) => {
+const ChequeDetail = ({ cheque, account, onRefresh }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [txDetails, setTxDetails] = useState(null);
+
   if (!cheque) return null;
 
   const hasPendingReceiver = cheque.pendingReceiver && cheque.pendingReceiver !== "0x0000000000000000000000000000000000000000";
+  
+  // Status 0 is PendingApproval
+  const isPendingApproval = Number(cheque.status) === 0;
+  const isFirstReceiver = account && cheque.firstReceiver.toLowerCase() === account.toLowerCase();
+  
+  const canAcceptOrReject = isPendingApproval && isFirstReceiver;
+
+  const handleAction = async (actionType) => {
+    try {
+      setError('');
+      setSuccess('');
+      setTxDetails(null);
+      setIsLoading(true);
+      setLoadingMsg('MetaMask onayı bekleniyor...');
+
+      if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner(account);
+      const contract = getContract(signer);
+
+      const startTime = Date.now();
+      let tx;
+
+      if (actionType === 'accept') {
+        tx = await contract.acceptCheque(cheque.id);
+      } else if (actionType === 'reject') {
+        tx = await contract.rejectCheque(cheque.id);
+      }
+
+      setLoadingMsg('Blockchain onayı bekleniyor... İşlem Hash: ' + tx.hash);
+
+      const receipt = await tx.wait();
+      const endTime = Date.now();
+      const durationSeconds = ((endTime - startTime) / 1000).toFixed(2);
+
+      setSuccess(actionType === 'accept' ? 'Çek kabul edildi.' : 'Çek reddedildi.');
+      setTxDetails({
+        hash: receipt.hash,
+        duration: durationSeconds
+      });
+
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (err) {
+      console.error(err);
+      if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
+        setError('Kullanıcı işlemi reddetti.');
+      } else {
+        setError('İşlem başarısız oldu. Lütfen tekrar deneyin.');
+      }
+    } finally {
+      setIsLoading(false);
+      setLoadingMsg('');
+    }
+  };
 
   return (
     <div className="cheque-detail-card">
+      
+      {error && <div className="alert alert-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+      {success && <div className="alert alert-success" style={{ marginBottom: '1rem' }}>{success}</div>}
+      
+      {txDetails && (
+        <div className="tx-details" style={{ marginBottom: '1rem' }}>
+          <p><strong>İşlem Hash:</strong> {txDetails.hash}</p>
+          <p><strong>İşlem Süresi:</strong> {txDetails.duration} saniye</p>
+        </div>
+      )}
+
+      {isLoading && <div className="loading-msg" style={{ marginBottom: '1rem' }}>{loadingMsg}</div>}
+
+      {canAcceptOrReject && !isLoading && !success && (
+        <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+          <button className="btn btn-primary" onClick={() => handleAction('accept')}>Kabul Et</button>
+          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('reject')}>Reddet</button>
+        </div>
+      )}
+
       <div className="cheque-detail-grid">
         <div className="detail-item">
           <span className="detail-label">Çek ID</span>
@@ -68,3 +152,4 @@ const ChequeDetail = ({ cheque }) => {
 };
 
 export default ChequeDetail;
+
