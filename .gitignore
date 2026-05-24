@@ -8,3 +8,4 @@ frontend/dist
 coverage
 npm-debug.log
 .DS_Store
+frontend/src/config/deployment.json
