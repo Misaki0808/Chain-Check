@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import WalletConnect from './components/WalletConnect'
 import CreateCheque from './components/CreateCheque'
 import ChequeList from './components/ChequeList'
+import IntermediaryPanel from './components/IntermediaryPanel'
 import './App.css'
 
 function App() {
@@ -22,6 +23,10 @@ function App() {
 
         {account && (
           <>
+            <section className="dashboard-section" style={{ marginTop: '2rem' }}>
+              <IntermediaryPanel account={account} />
+            </section>
+            
             <section className="dashboard-section" style={{ marginTop: '2rem' }}>
               <ChequeList account={account} />
             </section>

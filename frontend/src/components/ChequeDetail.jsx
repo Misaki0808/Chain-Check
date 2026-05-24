@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
-import { getContract } from '../utils/contractConnection';
+import { getContract, INTERMEDIARY_ADDRESS } from '../utils/contractConnection';
 import StatusBadge from './StatusBadge';
 
 const ChequeDetail = ({ cheque, account, onRefresh }) => {
@@ -11,22 +11,57 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [txDetails, setTxDetails] = useState(null);
+  
+  // Transfer request specific state
+  const [newReceiver, setNewReceiver] = useState('');
 
   if (!cheque) return null;
 
+  const safeAccount = account ? account.toLowerCase() : '';
+  const safeIntermediary = INTERMEDIARY_ADDRESS ? INTERMEDIARY_ADDRESS.toLowerCase() : '';
   const hasPendingReceiver = cheque.pendingReceiver && cheque.pendingReceiver !== "0x0000000000000000000000000000000000000000";
   
-  // Status 0 is PendingApproval
+  // Statuses
   const isPendingApproval = Number(cheque.status) === 0;
-  const isFirstReceiver = account && cheque.firstReceiver.toLowerCase() === account.toLowerCase();
+  const isActive = Number(cheque.status) === 1;
+  const isTransferPending = Number(cheque.status) === 3;
+  const isPaymentRequested = Number(cheque.status) === 4;
   
-  const canAcceptOrReject = isPendingApproval && isFirstReceiver;
+  // Roles
+  const isFirstReceiver = safeAccount === cheque.firstReceiver.toLowerCase();
+  const isCurrentOwner = safeAccount === cheque.currentOwner.toLowerCase();
+  const isPendingReceiverUser = hasPendingReceiver && safeAccount === cheque.pendingReceiver.toLowerCase();
+  const isIntermediary = safeAccount === safeIntermediary;
+  
+  // UI Conditions
+  const canAcceptOrRejectInitial = isPendingApproval && isFirstReceiver;
+  const canRequestTransfer = isActive && isCurrentOwner;
+  const canAcceptOrRejectTransfer = isTransferPending && isPendingReceiverUser;
+  const canRequestPayment = isActive && isCurrentOwner;
+  const canMarkAsPaid = isPaymentRequested && isIntermediary;
 
   const handleAction = async (actionType) => {
     try {
       setError('');
       setSuccess('');
       setTxDetails(null);
+      
+      // Validation for transfer request
+      if (actionType === 'requestTransfer') {
+        if (!newReceiver.trim()) {
+          setError('Lütfen yeni alıcı adresini girin.');
+          return;
+        }
+        if (!ethers.isAddress(newReceiver)) {
+          setError('Geçersiz cüzdan adresi.');
+          return;
+        }
+        if (newReceiver.toLowerCase() === safeAccount) {
+          setError('Kendinize devredemezsiniz.');
+          return;
+        }
+      }
+
       setIsLoading(true);
       setLoadingMsg('MetaMask onayı bekleniyor...');
 
@@ -42,6 +77,16 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
         tx = await contract.acceptCheque(cheque.id);
       } else if (actionType === 'reject') {
         tx = await contract.rejectCheque(cheque.id);
+      } else if (actionType === 'requestTransfer') {
+        tx = await contract.requestTransfer(cheque.id, newReceiver);
+      } else if (actionType === 'acceptTransfer') {
+        tx = await contract.acceptTransfer(cheque.id);
+      } else if (actionType === 'rejectTransfer') {
+        tx = await contract.rejectTransfer(cheque.id);
+      } else if (actionType === 'requestPayment') {
+        tx = await contract.requestPayment(cheque.id);
+      } else if (actionType === 'markAsPaid') {
+        tx = await contract.markAsPaid(cheque.id);
       }
 
       setLoadingMsg('Blockchain onayı bekleniyor... İşlem Hash: ' + tx.hash);
@@ -50,11 +95,30 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
       const endTime = Date.now();
       const durationSeconds = ((endTime - startTime) / 1000).toFixed(2);
 
-      setSuccess(actionType === 'accept' ? 'Çek kabul edildi.' : 'Çek reddedildi.');
+      // Determine success message
+      let successMsg = 'İşlem başarılı.';
+      if (actionType === 'accept') successMsg = 'Çek kabul edildi.';
+      if (actionType === 'reject') successMsg = 'Çek reddedildi.';
+      if (actionType === 'requestTransfer') successMsg = 'Devir talebi oluşturuldu.';
+      if (actionType === 'acceptTransfer') {
+        // Check if transferred back to creator
+        if (safeAccount === cheque.creator.toLowerCase()) {
+          successMsg = 'Çek iptal edildi.';
+        } else {
+          successMsg = 'Devir kabul edildi.';
+        }
+      }
+      if (actionType === 'rejectTransfer') successMsg = 'Devir reddedildi.';
+      if (actionType === 'requestPayment') successMsg = 'Ödeme talebi başlatıldı.';
+      if (actionType === 'markAsPaid') successMsg = 'Çek ödendi olarak işaretlendi.';
+
+      setSuccess(successMsg);
       setTxDetails({
         hash: receipt.hash,
         duration: durationSeconds
       });
+      
+      setNewReceiver('');
 
       if (onRefresh) {
         onRefresh();
@@ -64,7 +128,7 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
         setError('Kullanıcı işlemi reddetti.');
       } else {
-        setError('İşlem başarısız oldu. Lütfen tekrar deneyin.');
+        setError('İşlem başarısız oldu. Lütfen tekrar deneyin. Detay: ' + (err.reason || err.message));
       }
     } finally {
       setIsLoading(false);
@@ -87,10 +151,48 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
 
       {isLoading && <div className="loading-msg" style={{ marginBottom: '1rem' }}>{loadingMsg}</div>}
 
-      {canAcceptOrReject && !isLoading && !success && (
+      {/* Initial Accept / Reject */}
+      {canAcceptOrRejectInitial && !isLoading && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
           <button className="btn btn-primary" onClick={() => handleAction('accept')}>Kabul Et</button>
           <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('reject')}>Reddet</button>
+        </div>
+      )}
+
+      {/* Transfer Request Form & Request Payment */}
+      {isActive && isCurrentOwner && !isLoading && !success && (
+        <div className="action-form" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+          <h4 style={{ marginTop: 0, marginBottom: '0.75rem', color: 'var(--text-main)' }}>İşlemler</h4>
+          
+          <div className="form-group" style={{ flexDirection: 'row', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
+            <input 
+              type="text" 
+              placeholder="Yeni Alıcı Wallet Adresi (0x...)" 
+              value={newReceiver}
+              onChange={(e) => setNewReceiver(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')}>Devret</button>
+          </div>
+
+          <div className="action-buttons">
+            <button className="btn" style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning-text)', width: '100%' }} onClick={() => handleAction('requestPayment')}>Ödemeye Gönder</button>
+          </div>
+        </div>
+      )}
+
+      {/* Transfer Accept / Reject */}
+      {canAcceptOrRejectTransfer && !isLoading && !success && (
+        <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')}>Devri Kabul Et</button>
+          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('rejectTransfer')}>Devri Reddet</button>
+        </div>
+      )}
+
+      {/* Intermediary Payment */}
+      {canMarkAsPaid && !isLoading && !success && (
+        <div className="action-buttons" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+          <button className="btn" style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success-text)', width: '100%' }} onClick={() => handleAction('markAsPaid')}>Ödendi Olarak İşaretle</button>
         </div>
       )}
 
