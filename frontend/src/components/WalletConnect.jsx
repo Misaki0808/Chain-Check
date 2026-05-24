@@ -159,7 +159,7 @@ const WalletConnect = ({ onAccountChange }) => {
       
       {isWrongNetwork && (
         <div className="alert alert-warning">
-          Lütfen MetaMask üzerinde Hardhat Local Network ağına geçin. Beklenen Chain ID: {TARGET_CHAIN_ID} (Mevcut: {chainId})
+          Lütfen MetaMask üzerinde Hardhat Local Network ağına geçin. Chain ID: 31337
         </div>
       )}
 
@@ -176,6 +176,7 @@ const WalletConnect = ({ onAccountChange }) => {
           <span className="status-badge connected">Cüzdan Bağlandı</span>
           <div className="wallet-details">
             <p><strong>Kullanıcı Adresi:</strong> {formatAddress(account)}</p>
+            <p><strong>Rol:</strong> {account.toLowerCase() === (INTERMEDIARY_ADDRESS || '').toLowerCase() ? 'Aracı Kurum' : 'Normal Kullanıcı'}</p>
             <p><strong>Ağ ID:</strong> {chainId}</p>
           </div>
           

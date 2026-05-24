@@ -4,6 +4,7 @@ import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
 import { getContract, INTERMEDIARY_ADDRESS } from '../utils/contractConnection';
 import StatusBadge from './StatusBadge';
+import HistoryTimeline from './HistoryTimeline';
 
 const ChequeDetail = ({ cheque, account, onRefresh }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -128,7 +129,8 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
         setError('Kullanıcı işlemi reddetti.');
       } else {
-        setError('İşlem başarısız oldu. Lütfen tekrar deneyin. Detay: ' + (err.reason || err.message));
+        // Keep user-facing error short, no raw blockchain error dump
+        setError('İşlem başarısız oldu. Lütfen tekrar deneyin.');
       }
     } finally {
       setIsLoading(false);
@@ -152,15 +154,15 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
       {isLoading && <div className="loading-msg" style={{ marginBottom: '1rem' }}>{loadingMsg}</div>}
 
       {/* Initial Accept / Reject */}
-      {canAcceptOrRejectInitial && !isLoading && !success && (
+      {canAcceptOrRejectInitial && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-primary" onClick={() => handleAction('accept')}>Kabul Et</button>
-          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('reject')}>Reddet</button>
+          <button className="btn btn-primary" onClick={() => handleAction('accept')} disabled={isLoading}>Kabul Et</button>
+          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('reject')} disabled={isLoading}>Reddet</button>
         </div>
       )}
 
       {/* Transfer Request Form & Request Payment */}
-      {isActive && isCurrentOwner && !isLoading && !success && (
+      {isActive && isCurrentOwner && !success && (
         <div className="action-form" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
           <h4 style={{ marginTop: 0, marginBottom: '0.75rem', color: 'var(--text-main)' }}>İşlemler</h4>
           
@@ -171,28 +173,29 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
               value={newReceiver}
               onChange={(e) => setNewReceiver(e.target.value)}
               style={{ flex: 1 }}
+              disabled={isLoading}
             />
-            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')}>Devret</button>
+            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')} disabled={isLoading}>Devret</button>
           </div>
 
           <div className="action-buttons">
-            <button className="btn" style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning-text)', width: '100%' }} onClick={() => handleAction('requestPayment')}>Ödemeye Gönder</button>
+            <button className="btn" style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning-text)', width: '100%' }} onClick={() => handleAction('requestPayment')} disabled={isLoading}>Ödemeye Gönder</button>
           </div>
         </div>
       )}
 
       {/* Transfer Accept / Reject */}
-      {canAcceptOrRejectTransfer && !isLoading && !success && (
+      {canAcceptOrRejectTransfer && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')}>Devri Kabul Et</button>
-          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('rejectTransfer')}>Devri Reddet</button>
+          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')} disabled={isLoading}>Devri Kabul Et</button>
+          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('rejectTransfer')} disabled={isLoading}>Devri Reddet</button>
         </div>
       )}
 
       {/* Intermediary Payment */}
-      {canMarkAsPaid && !isLoading && !success && (
+      {canMarkAsPaid && !success && (
         <div className="action-buttons" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn" style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success-text)', width: '100%' }} onClick={() => handleAction('markAsPaid')}>Ödendi Olarak İşaretle</button>
+          <button className="btn" style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success-text)', width: '100%' }} onClick={() => handleAction('markAsPaid')} disabled={isLoading}>Ödendi Olarak İşaretle</button>
         </div>
       )}
 
@@ -248,6 +251,10 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
           <span className="detail-label">Kimlik Hash</span>
           <span className="detail-value monospace-small">{cheque.identityHash}</span>
         </div>
+      </div>
+
+      <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+        <HistoryTimeline chequeId={cheque.id} updatedAt={cheque.updatedAt} />
       </div>
     </div>
   );

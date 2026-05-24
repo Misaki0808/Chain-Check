@@ -91,13 +91,16 @@ const CreateCheque = ({ account }) => {
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
         setError('Kullanıcı işlemi reddetti.');
       } else {
-        setError('Çek oluşturulamadı. Lütfen bilgileri kontrol edin. Detay: ' + (err.reason || err.message));
+        // Keep user-facing error short, no raw blockchain error dump
+        setError('Çek oluşturulamadı. Lütfen bilgileri kontrol edin.');
       }
     } finally {
       setIsLoading(false);
       setLoadingMsg('');
     }
   };
+
+  const configValid = isConfigValid();
 
   return (
     <div className="create-cheque-container">
@@ -121,7 +124,7 @@ const CreateCheque = ({ account }) => {
             value={firstReceiver} 
             onChange={(e) => setFirstReceiver(e.target.value)} 
             placeholder="0x..." 
-            disabled={isLoading}
+            disabled={isLoading || !configValid}
           />
         </div>
         
@@ -133,7 +136,7 @@ const CreateCheque = ({ account }) => {
             onChange={(e) => setAmount(e.target.value)} 
             placeholder="Örn: 50000" 
             min="1"
-            disabled={isLoading}
+            disabled={isLoading || !configValid}
           />
         </div>
 
@@ -143,7 +146,7 @@ const CreateCheque = ({ account }) => {
             type="date" 
             value={dueDate} 
             onChange={(e) => setDueDate(e.target.value)} 
-            disabled={isLoading}
+            disabled={isLoading || !configValid}
           />
         </div>
 
@@ -153,7 +156,7 @@ const CreateCheque = ({ account }) => {
             type="text" 
             value={maskedName} 
             onChange={(e) => setMaskedName(e.target.value)} 
-            disabled={isLoading}
+            disabled={isLoading || !configValid}
           />
           <small className="form-hint">Demo amaçlıdır. Gerçek isim kullanmayın.</small>
         </div>
@@ -164,7 +167,7 @@ const CreateCheque = ({ account }) => {
             type="text" 
             value={identityHash} 
             onChange={(e) => setIdentityHash(e.target.value)} 
-            disabled={isLoading}
+            disabled={isLoading || !configValid}
           />
           <small className="form-hint">Demo TC/VKN hash temsili.</small>
         </div>
@@ -172,7 +175,7 @@ const CreateCheque = ({ account }) => {
         <button 
           type="submit" 
           className="btn btn-primary submit-btn" 
-          disabled={isLoading || !account}
+          disabled={isLoading || !account || !configValid}
         >
           {isLoading ? 'İşleniyor...' : 'Çek Oluştur'}
         </button>
