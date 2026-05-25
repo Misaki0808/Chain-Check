@@ -18,7 +18,6 @@ export const checkContractDeployed = async (provider) => {
   if (!isConfigValid()) return false;
   try {
     const code = await provider.getCode(CONTRACT_ADDRESS);
-    // If it's just "0x", it means no bytecode is at this address
     return code !== "0x";
   } catch (err) {
     console.error("Error checking contract code:", err);
@@ -27,15 +26,44 @@ export const checkContractDeployed = async (provider) => {
 };
 
 /**
- * Returns a contract instance connected to the given provider or signer.
- * @param {ethers.Provider | ethers.Signer} providerOrSigner 
- * @returns {ethers.Contract} The connected DigitalCheque contract
+ * Returns a read-only contract instance connected to the provider.
  */
-export const getContract = (providerOrSigner) => {
+export const getReadOnlyContract = (provider) => {
   if (!isConfigValid()) {
     throw new Error("Contract is not deployed or config is missing.");
   }
-  return new ethers.Contract(CONTRACT_ADDRESS, DigitalChequeABI, providerOrSigner);
+  return new ethers.Contract(CONTRACT_ADDRESS, DigitalChequeABI, provider);
+};
+
+/**
+ * Returns a writable contract instance connected to the given signer.
+ */
+export const getSignerContract = (signer) => {
+  if (!isConfigValid()) {
+    throw new Error("Contract is not deployed or config is missing.");
+  }
+  return new ethers.Contract(CONTRACT_ADDRESS, DigitalChequeABI, signer);
+};
+
+/**
+ * Normalizes an ethers v6 Result object for a cheque into a clean JS object.
+ */
+export const normalizeCheque = (c) => {
+  return {
+    id: c.id ? c.id.toString() : '0',
+    creator: c.creator,
+    firstReceiver: c.firstReceiver,
+    currentOwner: c.currentOwner,
+    pendingReceiver: c.pendingReceiver,
+    intermediary: c.intermediary,
+    amount: c.amount ? c.amount.toString() : '0',
+    dueDate: c.dueDate ? Number(c.dueDate) : 0,
+    identityHash: c.identityHash,
+    maskedName: c.maskedReceiverName, // from contract field maskedReceiverName
+    status: c.status ? Number(c.status) : 0,
+    createdAt: c.createdAt ? Number(c.createdAt) : 0,
+    updatedAt: c.updatedAt ? Number(c.updatedAt) : 0
+  };
 };
 
 export { CONTRACT_ADDRESS, INTERMEDIARY_ADDRESS, CHAIN_ID };

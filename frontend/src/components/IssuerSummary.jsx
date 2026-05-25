@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { getContract } from '../utils/contractConnection';
+import { getReadOnlyContract } from '../utils/contractConnection';
 import { formatAddress } from '../utils/formatAddress';
 
 const IssuerSummary = ({ creatorAddress, account }) => {
@@ -22,15 +22,8 @@ const IssuerSummary = ({ creatorAddress, account }) => {
       if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
       const provider = new ethers.BrowserProvider(window.ethereum);
       
-      // Use any signer/provider to read. We pass the connected account if available.
-      let contract;
-      if (account) {
-        const signer = await provider.getSigner(account);
-        contract = getContract(signer);
-      } else {
-        const dummySigner = await provider.getSigner();
-        contract = getContract(dummySigner);
-      }
+      // Use getReadOnlyContract to read data purely from provider
+      const contract = getReadOnlyContract(provider);
 
       // Fetch all cheques related to this address
       const chequeIds = await contract.getUserCheques(creatorAddress);

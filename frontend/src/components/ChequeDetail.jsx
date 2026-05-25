@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
-import { getContract, INTERMEDIARY_ADDRESS } from '../utils/contractConnection';
+import { getSignerContract, INTERMEDIARY_ADDRESS } from '../utils/contractConnection';
 import StatusBadge from './StatusBadge';
 import HistoryTimeline from './HistoryTimeline';
 import IssuerSummary from './IssuerSummary';
@@ -77,7 +77,7 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner(account);
-      const contract = getContract(signer);
+      const contract = getSignerContract(signer);
 
       const startTime = Date.now();
       let tx;

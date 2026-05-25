@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { getContract } from '../utils/contractConnection';
+import { getReadOnlyContract } from '../utils/contractConnection';
 import { getHistoryLabel } from '../utils/historyLabels';
 import { formatAddress } from '../utils/formatAddress';
 
@@ -20,10 +20,8 @@ const HistoryTimeline = ({ chequeId, updatedAt }) => {
 
       if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
       const provider = new ethers.BrowserProvider(window.ethereum);
-      // We don't necessarily need a signer for a read operation, 
-      // but getContract is usually set up with a signer in our app flow
-      const signer = await provider.getSigner();
-      const contract = getContract(signer);
+      // We use getReadOnlyContract for pure view functions to avoid signer caching issues
+      const contract = getReadOnlyContract(provider);
 
       const history = await contract.getChequeHistory(chequeId);
       

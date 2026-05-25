@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { formatAddress } from '../utils/formatAddress';
 import { 
-  getContract, 
+  getSignerContract, 
   isConfigValid, 
   checkContractDeployed,
   CONTRACT_ADDRESS, 
@@ -49,6 +49,7 @@ const WalletConnect = ({ onAccountChange, onDeployStatusChange }) => {
 
     try {
       const isDeployed = await checkContractDeployed(provider);
+      console.debug('[WalletConnect] checkContractDeployed result:', isDeployed, '| address:', CONTRACT_ADDRESS);
       if (!isDeployed) {
         setContractStatus('Deploy Edilmedi');
         if (onDeployStatusChange) onDeployStatusChange(false);
@@ -57,7 +58,7 @@ const WalletConnect = ({ onAccountChange, onDeployStatusChange }) => {
 
       // We only instantiate the contract if the user is connected
       const signer = await provider.getSigner(userAddress);
-      const contract = getContract(signer);
+      const contract = getSignerContract(signer);
       
       // If we reach here without throwing, we consider the contract connected
       if (contract.target) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { getContract, INTERMEDIARY_ADDRESS, isConfigValid } from '../utils/contractConnection';
+import { getSignerContract, INTERMEDIARY_ADDRESS, isConfigValid, normalizeCheque } from '../utils/contractConnection';
 import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
@@ -31,7 +31,7 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner(account);
-      const contract = getContract(signer);
+      const contract = getSignerContract(signer);
 
       // Iterate total cheques to find payment requests
       const counter = await contract.chequeCounter();
@@ -51,21 +51,7 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       
       const allCheques = await Promise.all(chequePromises);
       
-      const normalizedCheques = allCheques.map(c => ({
-        id: c.id ? c.id.toString() : '0',
-        creator: c.creator,
-        firstReceiver: c.firstReceiver,
-        currentOwner: c.currentOwner,
-        pendingReceiver: c.pendingReceiver,
-        intermediary: c.intermediary,
-        amount: c.amount ? c.amount.toString() : '0',
-        dueDate: c.dueDate ? Number(c.dueDate) : 0,
-        identityHash: c.identityHash,
-        maskedName: c.maskedReceiverName,
-        status: c.status ? Number(c.status) : 0,
-        createdAt: c.createdAt ? Number(c.createdAt) : 0,
-        updatedAt: c.updatedAt ? Number(c.updatedAt) : 0
-      }));
+      const normalizedCheques = allCheques.map(normalizeCheque);
 
       // Filter only PaymentRequested (status === 4)
       const paymentRequestedCheques = normalizedCheques.filter(c => c.status === 4);
@@ -75,16 +61,8 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       
       setPendingCheques(paymentRequestedCheques);
     } catch (err) {
-      console.error("DEBUG: Error fetching payment requests:", err);
-      if (err.info) console.error("DEBUG Error Info:", err.info);
-      if (err.reason) console.error("DEBUG Error Reason:", err.reason);
-      
-      const isDecodeError = err.code === 'CALL_EXCEPTION' || err.code === 'BAD_DATA' || (err.message && err.message.includes('decode result data'));
-      if (isDecodeError) {
-        setError("Contract okunamadı. Local deploy scriptini tekrar çalıştırın.");
-      } else {
-        setError(`Ödeme talepleri yüklenirken bir hata oluştu: ${err.shortMessage || err.message}`);
-      }
+      console.error("Error fetching payment requests:", err);
+      setError("Ödeme talepleri okunurken teknik bir hata oluştu. Detaylar console ekranına yazdırıldı.");
     } finally {
       setIsLoading(false);
     }
@@ -102,7 +80,7 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
     <div className="cheque-list-container">
       <div className="list-header" style={{ borderBottomColor: 'var(--warning-bg)' }}>
         <h3 style={{ color: 'var(--warning-text)' }}>Aracı Kurum Paneli</h3>
-        <button className="btn btn-small" onClick={fetchPendingPayments} disabled={isLoading}>
+        <button className="btn btn-small" onClick={fetchPaymentRequests} disabled={isLoading}>
           {isLoading ? 'Yenileniyor...' : 'Yenile'}
         </button>
       </div>

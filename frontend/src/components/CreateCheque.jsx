@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
-import { getContract, isConfigValid } from '../utils/contractConnection';
+import { getSignerContract, isConfigValid } from '../utils/contractConnection';
 
 const CreateCheque = ({ account, isDeployed }) => {
   const [receiver, setReceiver] = useState('');
@@ -52,7 +52,7 @@ const CreateCheque = ({ account, isDeployed }) => {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner(account);
-      const contract = getContract(signer);
+      const contract = getSignerContract(signer);
 
       // Convert date to Unix timestamp (seconds)
       const dueDateUnix = Math.floor(new Date(dueDate).getTime() / 1000);
