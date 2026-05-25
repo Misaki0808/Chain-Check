@@ -49,7 +49,6 @@ const WalletConnect = ({ onAccountChange, onDeployStatusChange }) => {
 
     try {
       const isDeployed = await checkContractDeployed(provider);
-      console.debug('[WalletConnect] checkContractDeployed result:', isDeployed, '| address:', CONTRACT_ADDRESS);
       if (!isDeployed) {
         setContractStatus('Deploy Edilmedi');
         if (onDeployStatusChange) onDeployStatusChange(false);

@@ -57,7 +57,7 @@ const CreateCheque = ({ account, isDeployed }) => {
       // Convert date to Unix timestamp (seconds)
       const dueDateUnix = Math.floor(new Date(dueDate).getTime() / 1000);
       
-      const amountValue = Number(amount);
+      const amountValue = BigInt(amount);
 
       const startTime = Date.now();
 

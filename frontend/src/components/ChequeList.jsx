@@ -13,7 +13,6 @@ const ChequeList = ({ account, isDeployed }) => {
   const [expandedChequeId, setExpandedChequeId] = useState(null);
 
   useEffect(() => {
-    console.debug('[ChequeList] isDeployed prop:', isDeployed, '| account:', account);
     if (account && isConfigValid() && isDeployed) {
       fetchCheques();
     }
@@ -42,8 +41,7 @@ const ChequeList = ({ account, isDeployed }) => {
       }
 
       // Fetch details for each cheque
-      const idArray = Array.from(chequeIds);
-      const reversedIds = idArray.reverse();
+      const reversedIds = [...chequeIds].reverse();
       
       const chequePromises = reversedIds.map(id => contract.getCheque(id));
       const fetchedCheques = await Promise.all(chequePromises);
@@ -78,7 +76,7 @@ const ChequeList = ({ account, isDeployed }) => {
     <div className="cheque-list-container">
       <div className="list-header">
         <h3>Çeklerim</h3>
-        <button className="btn btn-small" onClick={fetchCheques} disabled={isLoading}>
+        <button className="btn btn-small" onClick={fetchCheques} disabled={isLoading || !isDeployed}>
           {isLoading ? 'Yenileniyor...' : 'Yenile'}
         </button>
       </div>

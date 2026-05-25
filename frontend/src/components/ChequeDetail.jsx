@@ -21,7 +21,7 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
 
   const safeAccount = account ? account.toLowerCase() : '';
   const safeIntermediary = INTERMEDIARY_ADDRESS ? INTERMEDIARY_ADDRESS.toLowerCase() : '';
-  const hasPendingReceiver = cheque.pendingReceiver && cheque.pendingReceiver !== "0x0000000000000000000000000000000000000000";
+  const hasPendingReceiver = cheque.pendingReceiver && cheque.pendingReceiver !== ethers.ZeroAddress;
   
   // Statuses
   const isPendingApproval = Number(cheque.status) === 0;
