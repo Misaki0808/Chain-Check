@@ -7,6 +7,7 @@ import './App.css'
 
 function App() {
   const [account, setAccount] = useState(null);
+  const [isDeployed, setIsDeployed] = useState(false);
 
   return (
     <div className="app-container">
@@ -18,21 +19,21 @@ function App() {
       <main className="app-main">
         <section className="dashboard-section">
           <h2>Dashboard</h2>
-          <WalletConnect onAccountChange={setAccount} />
+          <WalletConnect onAccountChange={setAccount} onDeployStatusChange={setIsDeployed} />
         </section>
 
         {account && (
           <>
             <section className="dashboard-section" style={{ marginTop: '2rem' }}>
-              <IntermediaryPanel account={account} />
+              <IntermediaryPanel account={account} isDeployed={isDeployed} />
             </section>
             
             <section className="dashboard-section" style={{ marginTop: '2rem' }}>
-              <ChequeList account={account} />
+              <ChequeList account={account} isDeployed={isDeployed} />
             </section>
             
             <section className="dashboard-section" style={{ marginTop: '2rem' }}>
-              <CreateCheque account={account} />
+              <CreateCheque account={account} isDeployed={isDeployed} />
             </section>
           </>
         )}

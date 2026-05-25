@@ -4,12 +4,13 @@ import { formatAddress } from '../utils/formatAddress';
 import { 
   getContract, 
   isConfigValid, 
+  checkContractDeployed,
   CONTRACT_ADDRESS, 
   INTERMEDIARY_ADDRESS, 
   CHAIN_ID 
 } from '../utils/contractConnection';
 
-const WalletConnect = ({ onAccountChange }) => {
+const WalletConnect = ({ onAccountChange, onDeployStatusChange }) => {
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [error, setError] = useState('');
@@ -42,10 +43,18 @@ const WalletConnect = ({ onAccountChange }) => {
   const initContract = async (provider, userAddress) => {
     if (!configValid) {
       setContractStatus('Config Hatası');
+      if (onDeployStatusChange) onDeployStatusChange(false);
       return;
     }
 
     try {
+      const isDeployed = await checkContractDeployed(provider);
+      if (!isDeployed) {
+        setContractStatus('Deploy Edilmedi');
+        if (onDeployStatusChange) onDeployStatusChange(false);
+        return;
+      }
+
       // We only instantiate the contract if the user is connected
       const signer = await provider.getSigner(userAddress);
       const contract = getContract(signer);
@@ -53,12 +62,15 @@ const WalletConnect = ({ onAccountChange }) => {
       // If we reach here without throwing, we consider the contract connected
       if (contract.target) {
         setContractStatus('Hazır (Bağlı)');
+        if (onDeployStatusChange) onDeployStatusChange(true);
       } else {
         setContractStatus('Hata');
+        if (onDeployStatusChange) onDeployStatusChange(false);
       }
     } catch (err) {
       console.error("Contract init failed:", err);
       setContractStatus('Bağlantı Hatası');
+      if (onDeployStatusChange) onDeployStatusChange(false);
     }
   };
 
@@ -157,6 +169,12 @@ const WalletConnect = ({ onAccountChange }) => {
 
       {error && <div className="alert alert-error">{error}</div>}
       
+      {contractStatus === 'Deploy Edilmedi' && (
+        <div className="alert alert-error">
+          Bu adreste deploy edilmiş contract bulunamadı. Lütfen local deploy scriptini tekrar çalıştırın.
+        </div>
+      )}
+
       {isWrongNetwork && (
         <div className="alert alert-warning">
           Lütfen MetaMask üzerinde Hardhat Local Network ağına geçin. Chain ID: 31337

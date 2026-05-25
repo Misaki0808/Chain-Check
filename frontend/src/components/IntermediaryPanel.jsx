@@ -5,23 +5,26 @@ import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
 
-const IntermediaryPanel = ({ account }) => {
+const IntermediaryPanel = ({ account, isDeployed }) => {
   const [pendingCheques, setPendingCheques] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [expandedChequeId, setExpandedChequeId] = useState(null);
 
+  // Aracı kurum adresiyle eşleşmiyor mu kontrolü
   const safeAccount = account ? account.toLowerCase() : '';
   const safeIntermediary = INTERMEDIARY_ADDRESS ? INTERMEDIARY_ADDRESS.toLowerCase() : '';
-  const isIntermediary = safeAccount && safeIntermediary && safeAccount === safeIntermediary;
+  const isIntermediary = safeAccount === safeIntermediary;
 
   useEffect(() => {
-    if (isIntermediary && isConfigValid()) {
-      fetchPendingPayments();
+    if (account && isConfigValid() && isIntermediary && isDeployed) {
+      fetchPaymentRequests();
     }
-  }, [account, isIntermediary]);
+  }, [account, isIntermediary, isDeployed]);
 
-  const fetchPendingPayments = async () => {
+  const fetchPaymentRequests = async () => {
+    if (!isDeployed) return;
+
     try {
       setIsLoading(true);
       setError('');
@@ -30,16 +33,17 @@ const IntermediaryPanel = ({ account }) => {
       const signer = await provider.getSigner(account);
       const contract = getContract(signer);
 
+      // Iterate total cheques to find payment requests
       const counter = await contract.chequeCounter();
       const totalCheques = Number(counter);
-      
+
       if (totalCheques === 0) {
         setPendingCheques([]);
         setIsLoading(false);
         return;
       }
 
-      // Fetch all cheques
+      // We need to check all cheques if they are in PaymentRequested status (4)
       const chequePromises = [];
       for (let i = 1; i <= totalCheques; i++) {
         chequePromises.push(contract.getCheque(i));
@@ -47,16 +51,40 @@ const IntermediaryPanel = ({ account }) => {
       
       const allCheques = await Promise.all(chequePromises);
       
+      const normalizedCheques = allCheques.map(c => ({
+        id: c.id ? c.id.toString() : '0',
+        creator: c.creator,
+        firstReceiver: c.firstReceiver,
+        currentOwner: c.currentOwner,
+        pendingReceiver: c.pendingReceiver,
+        intermediary: c.intermediary,
+        amount: c.amount ? c.amount.toString() : '0',
+        dueDate: c.dueDate ? Number(c.dueDate) : 0,
+        identityHash: c.identityHash,
+        maskedName: c.maskedReceiverName,
+        status: c.status ? Number(c.status) : 0,
+        createdAt: c.createdAt ? Number(c.createdAt) : 0,
+        updatedAt: c.updatedAt ? Number(c.updatedAt) : 0
+      }));
+
       // Filter only PaymentRequested (status === 4)
-      const paymentRequestedCheques = allCheques.filter(c => Number(c.status) === 4);
+      const paymentRequestedCheques = normalizedCheques.filter(c => c.status === 4);
       
       // Show newest first
       paymentRequestedCheques.reverse();
       
       setPendingCheques(paymentRequestedCheques);
     } catch (err) {
-      console.error("Error fetching payment requests:", err);
-      setError("Ödeme talepleri yüklenirken bir hata oluştu.");
+      console.error("DEBUG: Error fetching payment requests:", err);
+      if (err.info) console.error("DEBUG Error Info:", err.info);
+      if (err.reason) console.error("DEBUG Error Reason:", err.reason);
+      
+      const isDecodeError = err.code === 'CALL_EXCEPTION' || err.code === 'BAD_DATA' || (err.message && err.message.includes('decode result data'));
+      if (isDecodeError) {
+        setError("Contract okunamadı. Local deploy scriptini tekrar çalıştırın.");
+      } else {
+        setError(`Ödeme talepleri yüklenirken bir hata oluştu: ${err.shortMessage || err.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -122,11 +150,11 @@ const IntermediaryPanel = ({ account }) => {
 
               {isExpanded && (
                 <div className="cheque-card-expanded">
-                  {/* Reuse ChequeDetail which already has "Ödendi Olarak İşaretle" logic */}
                   <ChequeDetail 
                     cheque={cheque} 
                     account={account} 
-                    onRefresh={fetchPendingPayments} 
+                    onRefresh={fetchPaymentRequests}
+                    isDeployed={isDeployed}
                   />
                 </div>
               )}

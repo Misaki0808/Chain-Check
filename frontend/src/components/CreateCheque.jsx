@@ -1,110 +1,113 @@
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
-import { getContract } from '../utils/contractConnection';
+import { getContract, isConfigValid } from '../utils/contractConnection';
 
-const CreateCheque = ({ account }) => {
-  const [firstReceiver, setFirstReceiver] = useState('');
+const CreateCheque = ({ account, isDeployed }) => {
+  const [receiver, setReceiver] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [identityHash, setIdentityHash] = useState('0x8a3f5c9e1b7d2f4a6e0c3b8d5f7a1e9c4b6d2f91bc'); // Demo hash
-  const [maskedName, setMaskedName] = useState('Ahmet Y.');
-
+  const [identityHash, setIdentityHash] = useState('');
+  const [maskedName, setMaskedName] = useState('');
+  
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState('');
-  const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [txDetails, setTxDetails] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    setTxDetails(null);
+    
+    if (!isDeployed) {
+      setError("Contract deploy edilmediği için işlem yapılamaz.");
+      return;
+    }
 
-    // Basic Validation
-    if (!ethers.isAddress(firstReceiver)) {
-      setError('Geçersiz İlk Alıcı cüzdan adresi.');
-      return;
-    }
-    if (Number(amount) <= 0) {
-      setError('Tutar 0\'dan büyük olmalıdır.');
-      return;
-    }
-    if (!dueDate) {
-      setError('Lütfen vade tarihi seçin.');
-      return;
-    }
-    if (!maskedName.trim() || !identityHash.trim()) {
-      setError('Lütfen maskeli ad ve kimlik hash alanlarını doldurun.');
-      return;
-    }
-    if (firstReceiver.toLowerCase() === account.toLowerCase()) {
-      setError('Çeki oluşturan, ilk alıcı olamaz.');
+    if (!isConfigValid()) {
+      setError("Contract adresi bulunamadı. Lütfen local deploy işlemini gerçekleştirin.");
       return;
     }
 
     try {
-      setIsLoading(true);
-      setLoadingMsg('MetaMask onayı bekleniyor...');
-
-      if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      setError('');
+      setSuccess('');
+      setTxDetails(null);
       
+      // Basic validation
+      if (!receiver || !amount || !dueDate || !identityHash || !maskedName) {
+        setError('Tüm alanları doldurunuz.');
+        return;
+      }
+
+      if (!ethers.isAddress(receiver)) {
+        setError('Geçersiz alıcı cüzdan adresi.');
+        return;
+      }
+
+      if (receiver.toLowerCase() === account.toLowerCase()) {
+        setError('Kendinize çek oluşturamazsınız.');
+        return;
+      }
+
+      setIsLoading(true);
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner(account);
       const contract = getContract(signer);
 
-      // Convert date to unix timestamp
-      const dueTimestamp = Math.floor(new Date(dueDate).getTime() / 1000);
+      // Convert date to Unix timestamp (seconds)
+      const dueDateUnix = Math.floor(new Date(dueDate).getTime() / 1000);
       
+      const amountValue = Number(amount);
+
       const startTime = Date.now();
 
-      // Send transaction
       const tx = await contract.createCheque(
-        firstReceiver,
-        amount, // Stored as uint256 directly per requirements, no real money decimal parsing
-        dueTimestamp,
+        receiver,
+        amountValue,
+        dueDateUnix,
         identityHash,
         maskedName
       );
 
-      setLoadingMsg('Blockchain onayı bekleniyor... İşlem Hash: ' + tx.hash);
-
-      // Wait for confirmation
       const receipt = await tx.wait();
+      
       const endTime = Date.now();
       const durationSeconds = ((endTime - startTime) / 1000).toFixed(2);
 
       setSuccess('Çek başarıyla oluşturuldu.');
       setTxDetails({
         hash: receipt.hash,
-        duration: durationSeconds,
-        blockNumber: receipt.blockNumber
+        duration: durationSeconds
       });
-      
-      // Reset form
-      setFirstReceiver('');
+
+      // Clear form
+      setReceiver('');
       setAmount('');
       setDueDate('');
+      setIdentityHash('');
+      setMaskedName('');
 
     } catch (err) {
       console.error(err);
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
         setError('Kullanıcı işlemi reddetti.');
       } else {
-        // Keep user-facing error short, no raw blockchain error dump
         setError('Çek oluşturulamadı. Lütfen bilgileri kontrol edin.');
       }
     } finally {
       setIsLoading(false);
-      setLoadingMsg('');
     }
   };
 
-  const configValid = isConfigValid();
+  if (!account) {
+    return null; // Hide if not connected
+  }
+
+  const isFormDisabled = isLoading || !isConfigValid() || !isDeployed;
 
   return (
     <div className="create-cheque-container">
-      <h3>Yeni Dijital Çek Oluştur</h3>
+      <h3>Yeni Çek Oluştur</h3>
       
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
@@ -116,27 +119,25 @@ const CreateCheque = ({ account }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="cheque-form">
+      <form onSubmit={handleSubmit} className="create-cheque-form">
         <div className="form-group">
-          <label>İlk Alıcı Wallet Adresi</label>
+          <label>İlk Alıcı Cüzdan Adresi (0x...)</label>
           <input 
             type="text" 
-            value={firstReceiver} 
-            onChange={(e) => setFirstReceiver(e.target.value)} 
-            placeholder="0x..." 
-            disabled={isLoading || !configValid}
+            value={receiver} 
+            onChange={(e) => setReceiver(e.target.value)}
+            disabled={isFormDisabled}
           />
         </div>
         
         <div className="form-group">
-          <label>Tutar</label>
+          <label>Tutar (₺)</label>
           <input 
             type="number" 
             value={amount} 
-            onChange={(e) => setAmount(e.target.value)} 
-            placeholder="Örn: 50000" 
+            onChange={(e) => setAmount(e.target.value)}
             min="1"
-            disabled={isLoading || !configValid}
+            disabled={isFormDisabled}
           />
         </div>
 
@@ -145,42 +146,40 @@ const CreateCheque = ({ account }) => {
           <input 
             type="date" 
             value={dueDate} 
-            onChange={(e) => setDueDate(e.target.value)} 
-            disabled={isLoading || !configValid}
+            onChange={(e) => setDueDate(e.target.value)}
+            disabled={isFormDisabled}
           />
         </div>
 
         <div className="form-group">
-          <label>Maskeli Alıcı Adı</label>
-          <input 
-            type="text" 
-            value={maskedName} 
-            onChange={(e) => setMaskedName(e.target.value)} 
-            disabled={isLoading || !configValid}
-          />
-          <small className="form-hint">Demo amaçlıdır. Gerçek isim kullanmayın.</small>
-        </div>
-
-        <div className="form-group">
-          <label>Kimlik Hash</label>
+          <label>Kimlik Hash (Demo: Herhangi bir metin)</label>
           <input 
             type="text" 
             value={identityHash} 
-            onChange={(e) => setIdentityHash(e.target.value)} 
-            disabled={isLoading || !configValid}
+            onChange={(e) => setIdentityHash(e.target.value)}
+            placeholder="örn: 9f86d081884c7d659a2feaa0c55ad015..."
+            disabled={isFormDisabled}
           />
-          <small className="form-hint">Demo TC/VKN hash temsili.</small>
+        </div>
+
+        <div className="form-group">
+          <label>Maskeli Alıcı Adı (Demo)</label>
+          <input 
+            type="text" 
+            value={maskedName} 
+            onChange={(e) => setMaskedName(e.target.value)}
+            placeholder="örn: Ahmet Y."
+            disabled={isFormDisabled}
+          />
         </div>
 
         <button 
           type="submit" 
-          className="btn btn-primary submit-btn" 
-          disabled={isLoading || !account || !configValid}
+          className="btn btn-primary" 
+          disabled={isFormDisabled}
         >
           {isLoading ? 'İşleniyor...' : 'Çek Oluştur'}
         </button>
-
-        {isLoading && <div className="loading-msg">{loadingMsg}</div>}
       </form>
     </div>
   );

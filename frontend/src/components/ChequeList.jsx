@@ -6,19 +6,21 @@ import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
 
-const ChequeList = ({ account }) => {
+const ChequeList = ({ account, isDeployed }) => {
   const [cheques, setCheques] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [expandedChequeId, setExpandedChequeId] = useState(null);
 
   useEffect(() => {
-    if (account && isConfigValid()) {
+    if (account && isConfigValid() && isDeployed) {
       fetchCheques();
     }
-  }, [account]);
+  }, [account, isDeployed]);
 
   const fetchCheques = async () => {
+    if (!isDeployed) return;
+    
     try {
       setIsLoading(true);
       setError('');
@@ -38,16 +40,44 @@ const ChequeList = ({ account }) => {
       }
 
       // Fetch details for each cheque
-      // Reverse to show newest first
-      const reversedIds = [...chequeIds].reverse();
+      // Convert chequeIds (which is a Proxy/Result of BigInts) to a standard array of BigInts/Strings
+      const idArray = Array.from(chequeIds);
+      const reversedIds = idArray.reverse();
       
       const chequePromises = reversedIds.map(id => contract.getCheque(id));
       const fetchedCheques = await Promise.all(chequePromises);
       
-      setCheques(fetchedCheques);
+      // Normalize ethers v6 Result objects into clean JS objects
+      const normalizedCheques = fetchedCheques.map(c => ({
+        id: c.id ? c.id.toString() : '0',
+        creator: c.creator,
+        firstReceiver: c.firstReceiver,
+        currentOwner: c.currentOwner,
+        pendingReceiver: c.pendingReceiver,
+        intermediary: c.intermediary,
+        amount: c.amount ? c.amount.toString() : '0',
+        dueDate: c.dueDate ? Number(c.dueDate) : 0,
+        identityHash: c.identityHash,
+        maskedName: c.maskedReceiverName, // Note: Smart contract field is maskedReceiverName
+        status: c.status ? Number(c.status) : 0,
+        createdAt: c.createdAt ? Number(c.createdAt) : 0,
+        updatedAt: c.updatedAt ? Number(c.updatedAt) : 0
+      }));
+      
+      setCheques(normalizedCheques);
     } catch (err) {
-      console.error("Error fetching cheques:", err);
-      setError("Çekler yüklenirken bir hata oluştu.");
+      console.error("DEBUG: Error fetching cheques details:", err);
+      if (err.info) console.error("DEBUG Error Info:", err.info);
+      if (err.reason) console.error("DEBUG Error Reason:", err.reason);
+      
+      // Catch specific "could not decode result data" (BAD_DATA) or CALL_EXCEPTION
+      const isDecodeError = err.code === 'CALL_EXCEPTION' || err.code === 'BAD_DATA' || (err.message && err.message.includes('decode result data'));
+      
+      if (isDecodeError) {
+        setError("Contract okunamadı. Local deploy scriptini tekrar çalıştırın.");
+      } else {
+        setError(`Çekler yüklenirken bir hata oluştu: ${err.shortMessage || err.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -118,6 +148,7 @@ const ChequeList = ({ account }) => {
                     cheque={cheque} 
                     account={account} 
                     onRefresh={fetchCheques} 
+                    isDeployed={isDeployed}
                   />
                 </div>
               )}

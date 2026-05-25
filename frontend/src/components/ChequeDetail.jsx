@@ -5,8 +5,9 @@ import { formatAmount, formatDate } from '../utils/formatters';
 import { getContract, INTERMEDIARY_ADDRESS } from '../utils/contractConnection';
 import StatusBadge from './StatusBadge';
 import HistoryTimeline from './HistoryTimeline';
+import IssuerSummary from './IssuerSummary';
 
-const ChequeDetail = ({ cheque, account, onRefresh }) => {
+const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [error, setError] = useState('');
@@ -41,7 +42,14 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
   const canRequestPayment = isActive && isCurrentOwner;
   const canMarkAsPaid = isPaymentRequested && isIntermediary;
 
+  const isActionDisabled = isLoading || !isDeployed;
+
   const handleAction = async (actionType) => {
+    if (!isDeployed) {
+      setError("Contract deploy edilmediği için işlem yapılamaz.");
+      return;
+    }
+
     try {
       setError('');
       setSuccess('');
@@ -156,8 +164,8 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
       {/* Initial Accept / Reject */}
       {canAcceptOrRejectInitial && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-primary" onClick={() => handleAction('accept')} disabled={isLoading}>Kabul Et</button>
-          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('reject')} disabled={isLoading}>Reddet</button>
+          <button className="btn btn-primary" onClick={() => handleAction('accept')} disabled={isActionDisabled}>Kabul Et</button>
+          <button className="btn btn-danger" onClick={() => handleAction('reject')} disabled={isActionDisabled}>Reddet</button>
         </div>
       )}
 
@@ -173,13 +181,13 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
               value={newReceiver}
               onChange={(e) => setNewReceiver(e.target.value)}
               style={{ flex: 1 }}
-              disabled={isLoading}
+              disabled={isActionDisabled}
             />
-            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')} disabled={isLoading}>Devret</button>
+            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')} disabled={isActionDisabled}>Devret</button>
           </div>
 
           <div className="action-buttons">
-            <button className="btn" style={{ backgroundColor: 'var(--warning-bg)', color: 'var(--warning-text)', width: '100%' }} onClick={() => handleAction('requestPayment')} disabled={isLoading}>Ödemeye Gönder</button>
+            <button className="btn btn-warning" style={{ width: '100%' }} onClick={() => handleAction('requestPayment')} disabled={isActionDisabled}>Ödemeye Gönder</button>
           </div>
         </div>
       )}
@@ -187,15 +195,15 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
       {/* Transfer Accept / Reject */}
       {canAcceptOrRejectTransfer && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')} disabled={isLoading}>Devri Kabul Et</button>
-          <button className="btn" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => handleAction('rejectTransfer')} disabled={isLoading}>Devri Reddet</button>
+          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')} disabled={isActionDisabled}>Devri Kabul Et</button>
+          <button className="btn btn-danger" onClick={() => handleAction('rejectTransfer')} disabled={isActionDisabled}>Devri Reddet</button>
         </div>
       )}
 
       {/* Intermediary Payment */}
       {canMarkAsPaid && !success && (
         <div className="action-buttons" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn" style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success-text)', width: '100%' }} onClick={() => handleAction('markAsPaid')} disabled={isLoading}>Ödendi Olarak İşaretle</button>
+          <button className="btn btn-success" style={{ width: '100%' }} onClick={() => handleAction('markAsPaid')} disabled={isActionDisabled}>Ödendi Olarak İşaretle</button>
         </div>
       )}
 
@@ -207,7 +215,7 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
         
         <div className="detail-item">
           <span className="detail-label">Tutar</span>
-          <span className="detail-value amount">{formatAmount(cheque.amount)}</span>
+          <span className="detail-value" style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>{formatAmount(cheque.amount)}</span>
         </div>
         
         <div className="detail-item">
@@ -217,41 +225,38 @@ const ChequeDetail = ({ cheque, account, onRefresh }) => {
 
         <div className="detail-item">
           <span className="detail-label">Durum</span>
-          <div className="detail-value"><StatusBadge statusIndex={cheque.status} /></div>
+          <StatusBadge statusIndex={cheque.status} />
         </div>
 
         <div className="detail-item full-width">
           <span className="detail-label">Çeki Oluşturan</span>
-          <span className="detail-value monospace">{cheque.creator}</span>
+          <span className="detail-value monospace">{formatAddress(cheque.creator)}</span>
         </div>
         
         <div className="detail-item full-width">
-          <span className="detail-label">İlk Alıcı</span>
-          <span className="detail-value monospace">{cheque.firstReceiver}</span>
-        </div>
-
-        <div className="detail-item full-width">
           <span className="detail-label">Mevcut Sahip</span>
-          <span className="detail-value monospace">{cheque.currentOwner}</span>
+          <span className="detail-value monospace">{formatAddress(cheque.currentOwner)}</span>
         </div>
 
-        {hasPendingReceiver && (
+        {cheque.pendingReceiver !== ethers.ZeroAddress && (
           <div className="detail-item full-width highlight-row">
-            <span className="detail-label">Bekleyen Yeni Alıcı</span>
-            <span className="detail-value monospace">{cheque.pendingReceiver}</span>
+            <span className="detail-label">Bekleyen Yeni Alıcı (Devir)</span>
+            <span className="detail-value monospace">{formatAddress(cheque.pendingReceiver)}</span>
           </div>
         )}
 
         <div className="detail-item">
-          <span className="detail-label">Maskeli Alıcı Adı</span>
-          <span className="detail-value">{cheque.maskedReceiverName}</span>
+          <span className="detail-label">Maskeli Ad</span>
+          <span className="detail-value">{cheque.maskedName}</span>
         </div>
 
         <div className="detail-item">
           <span className="detail-label">Kimlik Hash</span>
-          <span className="detail-value monospace-small">{cheque.identityHash}</span>
+          <span className="detail-value monospace-small">{formatAddress(cheque.identityHash)}</span>
         </div>
       </div>
+
+      <IssuerSummary creatorAddress={cheque.creator} account={account} />
 
       <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
         <HistoryTimeline chequeId={cheque.id} updatedAt={cheque.updatedAt} />
