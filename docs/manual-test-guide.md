@@ -200,7 +200,11 @@ Bu bölümde uygulamanın baştan sona çalışıp çalışmadığı test edilir
 
 ## Step 1 — Account #1 ile Çek Oluştur
 
-MetaMask’ta **Account #1** seç.
+> **Önemli Not:**
+> 1. Sayfaya ilk girdiğinizde **"Cüzdanı Bağla"** (Connect Wallet) butonuna basarak MetaMask'ı uygulamaya bağlayın.
+> 2. Formlardaki 'Adres' kısımlarına yazacağınız değerleri, Terminal 1'de çalıştırdığınız Hardhat ekranındaki 'Address: 0x...' satırlarından kopyalayabilirsiniz.
+
+MetaMask’ta **Account #1** seç. *(Tarayıcınızın sağ üstündeki MetaMask ikonuna tıklayıp, hesap listesinden Account #1'i seçin)*
 
 Uygulamada “Yeni Çek Oluştur” formunu doldur.
 
@@ -220,7 +224,7 @@ Sonra:
 
 butonuna bas.
 
-MetaMask açılırsa işlemi onayla.
+MetaMask açıldığında **Onayla (Confirm)** butonuna basarak işlemi onayla. *(Görünen işlem ücretleri tamamen test ağındaki sahte paralardır, endişe etmeyin.)*
 
 Beklenen sonuç:
 
@@ -235,7 +239,7 @@ Beklenen sonuç:
 
 ## Step 2 — Account #2 ile Çeki Kabul Et
 
-MetaMask’ta **Account #2** seç.
+MetaMask’ta **Account #2** seç. *(MetaMask uzantısını açıp, hesap listesinden Account 2'ye geçiş yapın)*
 
 Sayfada gerekirse “Yenile” butonuna bas.
 
@@ -763,7 +767,20 @@ Tüm kritik checkboxlar işaretlenirse demo video çekimine hazırdır.
 
 ---
 
-# 15. Kısa Sonuç
+# 15. Sıkça Sorulan Sorular / Sorun Giderme
+
+**Soru:** Hardhat (Terminal 1) ekranını yanlışlıkla kapatıp tekrar açtım. Şimdi MetaMask üzerinden işlem yaparken "Internal JSON-RPC Error" veya "Nonce too high" hatası alıyorum, ne yapmalıyım?
+
+**Çözüm:** Hardhat'i kapatıp açtığınızda blockchain ağı sıfırlanır ancak MetaMask eski işlem sırasını (nonce) hatırladığı için kafası karışır. Bu durumu çözmek için:
+1. MetaMask uzantısını açın.
+2. Sağ üstten ayarlara girin.
+3. **Gelişmiş** (Advanced) sekmesine tıklayın.
+4. **Hesap Etkinliğini Temizle** (Clear Activity / Reset Account) butonuna basın.
+Bunu hata veren her hesap için tekrarladığınızda sorun çözülecektir.
+
+---
+
+# 16. Kısa Sonuç
 
 Bu test tamamlandığında tester şu kararı vermelidir:
 
