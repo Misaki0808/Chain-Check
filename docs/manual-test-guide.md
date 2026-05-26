@@ -517,190 +517,190 @@ Aşağıdaki maddeleri test sırasında tikleyin.
 
 ## Environment Setup
 
-- [ ] Proje klasörü açıldı.
-- [ ] Terminal 1’de `npx hardhat node` çalıştı.
-- [ ] Terminal 1 açık bırakıldı.
-- [ ] Terminal 2’de deploy script çalıştı.
-- [ ] Contract başarıyla deploy edildi.
-- [ ] Terminal 3’te frontend çalıştı.
-- [ ] Uygulama tarayıcıda açıldı.
-- [ ] MetaMask yüklü.
-- [ ] Hardhat Local ağı eklendi.
-- [ ] MetaMask Hardhat Local ağına geçti.
-- [ ] Account #0 import edildi.
-- [ ] Account #1 import edildi.
-- [ ] Account #2 import edildi.
-- [ ] Account #3 import edildi.
+- [x] Proje klasörü açıldı.
+- [x] Terminal 1’de `npx hardhat node` çalıştı.
+- [x] Terminal 1 açık bırakıldı.
+- [x] Terminal 2’de deploy script çalıştı.
+- [x] Contract başarıyla deploy edildi.
+- [x] Terminal 3’te frontend çalıştı.
+- [x] Uygulama tarayıcıda açıldı.
+- [x] MetaMask yüklü.
+- [x] Hardhat Local ağı eklendi.
+- [x] MetaMask Hardhat Local ağına geçti.
+- [x] Account #0 import edildi.
+- [x] Account #1 import edildi.
+- [x] Account #2 import edildi.
+- [x] Account #3 import edildi.
 
 ---
 
 ## Wallet and Contract
 
-- [ ] Cüzdan başarıyla bağlandı.
-- [ ] Kullanıcı adresi görünüyor.
-- [ ] Rol bilgisi görünüyor.
-- [ ] Ağ ID 31337 görünüyor.
-- [ ] Contract adresi görünüyor.
-- [ ] Aracı kurum adresi görünüyor.
-- [ ] Bağlantı durumu “Hazır” görünüyor.
-- [ ] Yanlış ağ uyarısı çalışıyor.
-- [ ] Contract deploy edilmemiş uyarısı çalışıyor.
-- [ ] Dashboard ve Çeklerim bölümü çelişkili durum göstermiyor.
+- [x] Cüzdan başarıyla bağlandı.
+- [x] Kullanıcı adresi görünüyor.(hepsi değil kısaltılmış hali)
+- [x] Rol bilgisi görünüyor.
+- [x] Ağ ID 31337 görünüyor.
+- [x] Contract adresi görünüyor.(hepsi değil kısaltılmış hali)
+- [x] Aracı kurum adresi görünüyor.(hepsi değil kısaltılmış hali)
+- [x] Bağlantı durumu “Hazır” görünüyor.
+- [x] Yanlış ağ uyarısı çalışıyor.
+- [x] Contract deploy edilmemiş uyarısı çalışıyor.
+- [x] Dashboard ve Çeklerim bölümü çelişkili durum göstermiyor.
 
 ---
 
 ## Cheque Creation
 
-- [ ] Account #1 ile giriş yapıldı.
-- [ ] Account #2 adresi ilk alıcı olarak yazıldı.
-- [ ] Tutar alanı dolduruldu.
-- [ ] Vade tarihi seçildi.
-- [ ] Kimlik Hash alanı dolduruldu.
-- [ ] Maskeli Alıcı Adı dolduruldu.
-- [ ] Çek Oluştur butonuna basıldı.
-- [ ] MetaMask onayı geldi.
-- [ ] İşlem onaylandı.
-- [ ] Başarı mesajı göründü.
-- [ ] İşlem hash’i göründü.
-- [ ] İşlem süresi göründü.
-- [ ] Çeklerim bölümünde çek göründü.
-- [ ] Durum “Onay Bekliyor” oldu.
+- [x] Account #1 ile giriş yapıldı.
+- [x] Account #2 adresi ilk alıcı olarak yazıldı.
+- [x] Tutar alanı dolduruldu.
+- [x] Vade tarihi seçildi.
+- [x] Kimlik Hash alanı dolduruldu.
+- [x] Maskeli Alıcı Adı dolduruldu.
+- [x] Çek Oluştur butonuna basıldı.
+- [x] MetaMask onayı geldi.
+- [x] İşlem onaylandı.
+- [x] Başarı mesajı göründü.
+- [x] İşlem hash’i göründü.
+- [x] İşlem süresi göründü.
+- [x] Çeklerim bölümünde çek göründü.
+- [x] Durum “Onay Bekliyor” oldu.
 
 ---
 
 ## Listing and Detail
 
-- [ ] Çek listesi hata vermeden yüklendi.
-- [ ] Yenile butonu çalışıyor.
-- [ ] Çek kartı görünüyor.
-- [ ] Çek ID görünüyor.
-- [ ] Tutar doğru görünüyor.
-- [ ] Vade tarihi doğru görünüyor.
-- [ ] Durum etiketi doğru görünüyor.
-- [ ] Çek detayı açılıyor.
-- [ ] Çeki oluşturan adres görünüyor.
-- [ ] İlk alıcı adresi görünüyor.
-- [ ] Mevcut sahip adresi görünüyor.
-- [ ] Bekleyen yeni alıcı alanı gerektiğinde görünüyor.
-- [ ] Kimlik Hash görünüyor.
-- [ ] Maskeli alıcı adı görünüyor.
-- [ ] Uzun adresler arayüzü bozmuyor.
-- [ ] Uzun hash arayüzü bozmuyor.
+- [x] Çek listesi hata vermeden yüklendi.
+- [x] Yenile butonu çalışıyor.
+- [x] Çek kartı görünüyor.
+- [x] Çek ID görünüyor.
+- [x] Tutar doğru görünüyor.
+- [x] Vade tarihi doğru görünüyor.
+- [x] Durum etiketi doğru görünüyor.
+- [x] Çek detayı açılıyor.
+- [x] Çeki oluşturan adres görünüyor.(hepsi değil kısaltılmış hali)
+- [x] İlk alıcı adresi görünüyor.(hepsi değil kısaltılmış hali)
+- [x] Mevcut sahip adresi görünüyor.(hepsi değil kısaltılmış hali)
+- [x] Bekleyen yeni alıcı alanı gerektiğinde görünüyor.
+- [x] Kimlik Hash görünüyor.(hepsi değil kısaltılmış hali)
+- [x] Maskeli alıcı adı görünüyor.
+- [x] Uzun adresler arayüzü bozmuyor.
+- [x] Uzun hash arayüzü bozmuyor.
 
 ---
 
 ## Issuer Summary
 
-- [ ] Çeki Oluşturan Özeti kartı görünüyor.
-- [ ] Toplam Oluşturulan Çek sayısı görünüyor.
-- [ ] Ödenen Çek sayısı görünüyor.
-- [ ] Devam Eden Çek sayısı görünüyor.
-- [ ] Reddedilen Çek sayısı görünüyor.
-- [ ] İptal Edilen Çek sayısı görünüyor.
-- [ ] Ödeme Başarı Oranı görünüyor.
-- [ ] “Gerçek finansal skor değildir” uyarısı görünüyor.
-- [ ] Özet kartı arayüzü bozmuyor.
+- [x] Çeki Oluşturan Özeti kartı görünüyor.
+- [x] Toplam Oluşturulan Çek sayısı görünüyor.
+- [x] Ödenen Çek sayısı görünüyor.
+- [x] Devam Eden Çek sayısı görünüyor.
+- [x] Reddedilen Çek sayısı görünüyor.
+- [x] İptal Edilen Çek sayısı görünüyor.
+- [x] Ödeme Başarı Oranı görünüyor.
+- [x] “Gerçek finansal skor değildir” uyarısı görünüyor.
+- [x] Özet kartı arayüzü bozmuyor.
 
 ---
 
 ## Accept / Reject
 
-- [ ] Account #2’ye geçildi.
-- [ ] Account #2 çeki görebiliyor.
-- [ ] Çek detayı açılıyor.
-- [ ] Kabul Et butonu görünüyor.
-- [ ] Reddet butonu görünüyor.
-- [ ] Account #1 kabul/red butonlarını görmüyor.
-- [ ] Kabul Et butonuna basıldı.
-- [ ] MetaMask onayı geldi.
-- [ ] İşlem onaylandı.
-- [ ] Durum “Aktif” oldu.
-- [ ] Mevcut sahip Account #2 oldu.
-- [ ] İşlem hash’i göründü.
-- [ ] İşlem süresi göründü.
-- [ ] İşlem geçmişinde “Çek kabul edildi” göründü.
+- [x] Account #2’ye geçildi.
+- [x] Account #2 çeki görebiliyor.
+- [x] Çek detayı açılıyor.
+- [x] Kabul Et butonu görünüyor.
+- [x] Reddet butonu görünüyor.
+- [x] Account #1 kabul/red butonlarını görmüyor.
+- [x] Kabul Et butonuna basıldı.
+- [x] MetaMask onayı geldi.
+- [x] İşlem onaylandı.
+- [x] Durum “Aktif” oldu.
+- [x] Mevcut sahip Account #2 oldu.
+- [x] İşlem hash’i göründü.
+- [x] İşlem süresi göründü.
+- [x] İşlem geçmişinde “Çek kabul edildi” göründü.
 
 ---
 
 ## Transfer
 
-- [ ] Account #2 mevcut sahip olarak çeki görüyor.
-- [ ] Devret bölümü görünüyor.
-- [ ] Account #3 adresi yeni alıcı olarak yazıldı.
-- [ ] Devret butonuna basıldı.
-- [ ] MetaMask onayı geldi.
-- [ ] İşlem onaylandı.
-- [ ] Durum “Devir Bekliyor” oldu.
-- [ ] Bekleyen yeni alıcı Account #3 oldu.
-- [ ] İşlem geçmişinde “Devir talebi oluşturuldu” göründü.
-- [ ] Account #3’e geçildi.
-- [ ] Account #3 çeki görebiliyor.
-- [ ] Devri Kabul Et butonu görünüyor.
-- [ ] Devri Reddet butonu görünüyor.
-- [ ] Devri Kabul Et butonuna basıldı.
-- [ ] MetaMask onayı geldi.
-- [ ] İşlem onaylandı.
-- [ ] Durum “Aktif” oldu.
-- [ ] Mevcut sahip Account #3 oldu.
-- [ ] İşlem geçmişinde “Devir kabul edildi” göründü.
+- [x] Account #2 mevcut sahip olarak çeki görüyor.
+- [x] Devret bölümü görünüyor.
+- [x] Account #3 adresi yeni alıcı olarak yazıldı.
+- [x] Devret butonuna basıldı.
+- [x] MetaMask onayı geldi.
+- [x] İşlem onaylandı.
+- [x] Durum “Devir Bekliyor” oldu.
+- [x] Bekleyen yeni alıcı Account #3 oldu.
+- [x] İşlem geçmişinde “Devir talebi oluşturuldu” göründü.
+- [x] Account #3’e geçildi.
+- [x] Account #3 çeki görebiliyor.
+- [x] Devri Kabul Et butonu görünüyor.
+- [x] Devri Reddet butonu görünüyor.
+- [x] Devri Kabul Et butonuna basıldı.
+- [x] MetaMask onayı geldi.
+- [x] İşlem onaylandı.
+- [x] Durum “Aktif” oldu.
+- [x] Mevcut sahip Account #3 oldu.
+- [x] İşlem geçmişinde “Devir kabul edildi” göründü.
 
 ---
 
 ## Payment
 
-- [ ] Account #3 mevcut sahip olarak çeki görüyor.
-- [ ] Ödemeye Gönder butonu görünüyor.
-- [ ] Ödemeye Gönder butonuna basıldı.
-- [ ] MetaMask onayı geldi.
-- [ ] İşlem onaylandı.
-- [ ] Durum “Ödemeye Gönderildi” oldu.
-- [ ] İşlem geçmişinde “Ödeme talebi başlatıldı” göründü.
-- [ ] Account #0’a geçildi.
-- [ ] Aracı Kurum Paneli görünüyor.
-- [ ] Ödemeye gönderilen çek panelde görünüyor.
-- [ ] Ödendi Olarak İşaretle butonu görünüyor.
-- [ ] Ödendi Olarak İşaretle butonuna basıldı.
-- [ ] MetaMask onayı geldi.
-- [ ] İşlem onaylandı.
-- [ ] Durum “Ödendi” oldu.
-- [ ] İşlem geçmişinde “Çek ödendi olarak işaretlendi” göründü.
-- [ ] Çek bekleyen ödeme panelinden kayboldu veya listede ödendi olarak göründü.
+- [x] Account #3 mevcut sahip olarak çeki görüyor.
+- [x] Ödemeye Gönder butonu görünüyor.
+- [x] Ödemeye Gönder butonuna basıldı.
+- [x] MetaMask onayı geldi.
+- [x] İşlem onaylandı.
+- [x] Durum “Ödemeye Gönderildi” oldu.
+- [x] İşlem geçmişinde “Ödeme talebi başlatıldı” göründü.
+- [x] Account #0’a geçildi.
+- [x] Aracı Kurum Paneli görünüyor.
+- [x] Ödemeye gönderilen çek panelde görünüyor.
+- [x] Ödendi Olarak İşaretle butonu görünüyor.
+- [x] Ödendi Olarak İşaretle butonuna basıldı.
+- [x] MetaMask onayı geldi.
+- [x] İşlem onaylandı.
+- [x] Durum “Ödendi” oldu.
+- [x] İşlem geçmişinde “Çek ödendi olarak işaretlendi” göründü.
+- [x] Çek bekleyen ödeme panelinden kayboldu veya listede ödendi olarak göründü.
 
 ---
 
 ## History Timeline
 
-- [ ] İşlem Geçmişi bölümü görünüyor.
-- [ ] “Çek oluşturuldu” görünüyor.
-- [ ] “Çek kabul edildi” görünüyor.
-- [ ] “Devir talebi oluşturuldu” görünüyor.
-- [ ] “Devir kabul edildi” görünüyor.
-- [ ] “Ödeme talebi başlatıldı” görünüyor.
-- [ ] “Çek ödendi olarak işaretlendi” görünüyor.
-- [ ] İşlemi yapan cüzdan adresleri görünüyor.
-- [ ] Tarih/saat bilgileri okunuyor.
-- [ ] Timeline arayüzü bozulmuyor.
+- [x] İşlem Geçmişi bölümü görünüyor.
+- [x] “Çek oluşturuldu” görünüyor.
+- [x] “Çek kabul edildi” görünüyor.
+- [x] “Devir talebi oluşturuldu” görünüyor.
+- [x] “Devir kabul edildi” görünüyor.
+- [x] “Ödeme talebi başlatıldı” görünüyor.
+- [x] “Çek ödendi olarak işaretlendi” görünüyor.
+- [x] İşlemi yapan cüzdan adresleri görünüyor.(hepsi değil kısaltılmış hali)
+- [x] Tarih/saat bilgileri okunuyor.
+- [x] Timeline arayüzü bozulmuyor.
 
 ---
 
 ## Negative / Edge Cases
 
-- [ ] Yanlış ağda uyarı çıkıyor.
-- [ ] Cüzdan bağlı değilken işlem yapılamıyor.
-- [ ] Contract deploy edilmemişken işlem yapılamıyor.
-- [ ] Boş form gönderilemiyor.
-- [ ] Geçersiz alıcı adresi kabul edilmiyor.
-- [ ] Sıfır tutar kabul edilmiyor.
-- [ ] Boş vade tarihi kabul edilmiyor.
-- [ ] Boş kimlik hash kabul edilmiyor.
-- [ ] Boş maskeli isim kabul edilmiyor.
-- [ ] İlk alıcı olmayan hesap kabul/red yapamıyor.
-- [ ] Mevcut sahip olmayan hesap devredemiyor.
-- [ ] Bekleyen alıcı olmayan hesap devri kabul edemiyor.
-- [ ] Aracı kurum olmayan hesap çeki ödendi yapamıyor.
-- [ ] Ödenmiş çek tekrar devredilemiyor.
-- [ ] Reddedilmiş çek tekrar işleme alınamıyor.
-- [ ] İptal edilmiş çek tekrar işleme alınamıyor.
+- [x] Yanlış ağda uyarı çıkıyor.
+- [x] Cüzdan bağlı değilken işlem yapılamıyor.
+- [x] Contract deploy edilmemişken işlem yapılamıyor.
+- [x] Boş form gönderilemiyor.
+- [x] Geçersiz alıcı adresi kabul edilmiyor.
+- [x] Sıfır tutar kabul edilmiyor.
+- [x] Boş vade tarihi kabul edilmiyor.
+- [x] Boş kimlik hash kabul edilmiyor.
+- [x] Boş maskeli isim kabul edilmiyor.
+- [x] İlk alıcı olmayan hesap kabul/red yapamıyor.
+- [x] Mevcut sahip olmayan hesap devredemiyor.
+- [x] Bekleyen alıcı olmayan hesap devri kabul edemiyor.
+- [x] Aracı kurum olmayan hesap çeki ödendi yapamıyor.
+- [x] Ödenmiş çek tekrar devredilemiyor.
+- [x] Reddedilmiş çek tekrar işleme alınamıyor.
+- [x] İptal edilmiş çek tekrar işleme alınamıyor.
 
 ---
 
@@ -708,14 +708,14 @@ Aşağıdaki maddeleri test sırasında tikleyin.
 
 - [ ] Genel arayüz temiz görünüyor.
 - [ ] Kartlar düzgün hizalanmış.
-- [ ] Butonlar anlaşılır.
-- [ ] Durum etiketleri anlaşılır.
-- [ ] Yazılar okunabilir.
+- [x] Butonlar anlaşılır.
+- [x] Durum etiketleri anlaşılır.
+- [x] Yazılar okunabilir.
 - [ ] Video kaydında arayüz anlaşılır olur.
-- [ ] Yatay taşma yok.
-- [ ] Mobil/küçük ekranda büyük bozulma yok.
-- [ ] Kullanıcıya ham blockchain hata mesajı gösterilmiyor.
-- [ ] Demo 1-2 dakikalık video için uygun görünüyor.
+- [x] Yatay taşma yok.
+- [ ] Mobil/küçük ekranda büyük bozulma yok.(bilmiyorum mobilden girmedim)
+- [x] Kullanıcıya ham blockchain hata mesajı gösterilmiyor.
+- [x] Demo 1-2 dakikalık video için uygun görünüyor.
 
 ---
 
@@ -789,3 +789,27 @@ Demo çalışıyor / çalışmıyor.
 Ana akış tamamlandı / tamamlanmadı.
 Hata varsa hangi adımda olduğu belirtildi.
 ```
+
+
+çeki düzenleyen = keşideci
+adına çek düzenlenen = lehtar
+çek devir işlemi = cirolamak(butonda ciro et diye görünsün)
+çeki devralan kişi = ciranta
+
+solda açılır kapanır panel olsun;
+çeklerim(düzenlediğim çekleri göreyim)
+çek düzenle(oluşturmak için)
+alacaklarım(adıma düzenlenen veya cirolanan çekler burada görünsün)
+
+çek başarı oranına reddedilen veya iptal edilen çekler hesap edilmesin
+ödenen toplam çek tutarı görünmeli, burada iki ayrım var bir vadesi gelmiş ödenmiş çek tutarı toplamı ve henüz vadesi gelmemiş ama aktif çek tutarı
+ 
+çek ilk sahibine geri dönünce sistemde aynı çekten iki tane oluşmasın
+
+çek düzenlenirken vade bugünün tarihinden sonra seçilmek zorunda olmalı aksi takdirde çek hükümsüz olur.
+
+ödemeye gönder yerine tahsile gönder yazsın
+
+aracı kurum ekranında çeki tahsil edildi veya yazıldı(ödenmedi) olmalı
+
+sol paneldeki sekmeleirn yanı sıra ortadaki boş alanda kişinin özeti görünsün
