@@ -1,12 +1,12 @@
 export const HISTORY_LABELS = {
-  'CREATED': 'Çek oluşturuldu',
+  'CREATED': 'Çek düzenlendi',
   'ACCEPTED': 'Çek kabul edildi',
   'REJECTED': 'Çek reddedildi',
-  'TRANSFER_REQUESTED': 'Devir talebi oluşturuldu',
-  'TRANSFER_ACCEPTED': 'Devir kabul edildi',
-  'TRANSFER_REJECTED': 'Devir reddedildi',
-  'PAYMENT_REQUESTED': 'Ödeme talebi başlatıldı',
-  'PAID': 'Çek ödendi olarak işaretlendi',
+  'TRANSFER_REQUESTED': 'Ciro talebi oluşturuldu',
+  'TRANSFER_ACCEPTED': 'Ciro kabul edildi',
+  'TRANSFER_REJECTED': 'Ciro reddedildi',
+  'PAYMENT_REQUESTED': 'Tahsil talebi başlatıldı',
+  'PAID': 'Çek tahsil edildi',
   'CANCELLED': 'Çek iptal edildi'
 };
 

@@ -108,18 +108,18 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       let successMsg = 'İşlem başarılı.';
       if (actionType === 'accept') successMsg = 'Çek kabul edildi.';
       if (actionType === 'reject') successMsg = 'Çek reddedildi.';
-      if (actionType === 'requestTransfer') successMsg = 'Devir talebi oluşturuldu.';
+      if (actionType === 'requestTransfer') successMsg = 'Ciro talebi oluşturuldu.';
       if (actionType === 'acceptTransfer') {
         // Check if transferred back to creator
         if (safeAccount === cheque.creator.toLowerCase()) {
           successMsg = 'Çek iptal edildi.';
         } else {
-          successMsg = 'Devir kabul edildi.';
+          successMsg = 'Ciro kabul edildi.';
         }
       }
-      if (actionType === 'rejectTransfer') successMsg = 'Devir reddedildi.';
-      if (actionType === 'requestPayment') successMsg = 'Ödeme talebi başlatıldı.';
-      if (actionType === 'markAsPaid') successMsg = 'Çek ödendi olarak işaretlendi.';
+      if (actionType === 'rejectTransfer') successMsg = 'Ciro reddedildi.';
+      if (actionType === 'requestPayment') successMsg = 'Tahsil talebi başlatıldı.';
+      if (actionType === 'markAsPaid') successMsg = 'Çek tahsil edildi.';
 
       setSuccess(successMsg);
       setTxDetails({
@@ -177,17 +177,17 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
           <div className="form-group" style={{ flexDirection: 'row', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
             <input 
               type="text" 
-              placeholder="Yeni Alıcı Wallet Adresi (0x...)" 
+              placeholder="Yeni Ciranta Wallet Adresi (0x...)" 
               value={newReceiver}
               onChange={(e) => setNewReceiver(e.target.value)}
               style={{ flex: 1 }}
               disabled={isActionDisabled}
             />
-            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')} disabled={isActionDisabled}>Devret</button>
+            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')} disabled={isActionDisabled}>Ciro Et</button>
           </div>
 
           <div className="action-buttons">
-            <button className="btn btn-warning" style={{ width: '100%' }} onClick={() => handleAction('requestPayment')} disabled={isActionDisabled}>Ödemeye Gönder</button>
+            <button className="btn btn-warning" style={{ width: '100%' }} onClick={() => handleAction('requestPayment')} disabled={isActionDisabled}>Tahsile Gönder</button>
           </div>
         </div>
       )}
@@ -195,15 +195,15 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       {/* Transfer Accept / Reject */}
       {canAcceptOrRejectTransfer && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')} disabled={isActionDisabled}>Devri Kabul Et</button>
-          <button className="btn btn-danger" onClick={() => handleAction('rejectTransfer')} disabled={isActionDisabled}>Devri Reddet</button>
+          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')} disabled={isActionDisabled}>Ciroyu Kabul Et</button>
+          <button className="btn btn-danger" onClick={() => handleAction('rejectTransfer')} disabled={isActionDisabled}>Ciroyu Reddet</button>
         </div>
       )}
 
       {/* Intermediary Payment */}
       {canMarkAsPaid && !success && (
         <div className="action-buttons" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-success" style={{ width: '100%' }} onClick={() => handleAction('markAsPaid')} disabled={isActionDisabled}>Ödendi Olarak İşaretle</button>
+          <button className="btn btn-success" style={{ width: '100%' }} onClick={() => handleAction('markAsPaid')} disabled={isActionDisabled}>Tahsil Edildi</button>
         </div>
       )}
 
@@ -229,7 +229,7 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
         </div>
 
         <div className="detail-item full-width">
-          <span className="detail-label">Çeki Oluşturan</span>
+          <span className="detail-label">Keşideci</span>
           <span className="detail-value monospace">{formatAddress(cheque.creator)}</span>
         </div>
         
@@ -240,7 +240,7 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
 
         {cheque.pendingReceiver !== ethers.ZeroAddress && (
           <div className="detail-item full-width highlight-row">
-            <span className="detail-label">Bekleyen Yeni Alıcı (Devir)</span>
+            <span className="detail-label">Bekleyen Ciranta (Ciro)</span>
             <span className="detail-value monospace">{formatAddress(cheque.pendingReceiver)}</span>
           </div>
         )}

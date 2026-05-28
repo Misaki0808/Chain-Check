@@ -208,7 +208,9 @@ contract DigitalCheque {
         c.updatedAt = block.timestamp;
 
         // Track cheque for the new receiver (if not already tracked)
-        userCheques[newReceiver].push(chequeId);
+        if (!_hasUserCheque(newReceiver, chequeId)) {
+            userCheques[newReceiver].push(chequeId);
+        }
 
         _addHistory(chequeId, msg.sender, "TRANSFER_REQUESTED");
 
@@ -345,5 +347,18 @@ contract DigitalCheque {
                 action: action
             })
         );
+    }
+
+    /**
+     * @dev Checks if a cheque ID already exists in a user's cheque list.
+     */
+    function _hasUserCheque(address user, uint256 chequeId) internal view returns (bool) {
+        uint256[] storage ids = userCheques[user];
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (ids[i] == chequeId) {
+                return true;
+            }
+        }
+        return false;
     }
 }

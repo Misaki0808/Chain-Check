@@ -160,53 +160,47 @@ const WalletConnect = ({ onAccountChange, onDeployStatusChange }) => {
   const isWrongNetwork = chainId && chainId !== TARGET_CHAIN_ID;
 
   return (
-    <div className="wallet-connect-container">
+    <div className="wallet-connect-container" style={{ padding: 0, flexDirection: 'row', justifyContent: 'flex-end', gap: '1rem', width: '100%' }}>
       {!configValid && (
-        <div className="alert alert-error">
-          Contract deployment bilgisi bulunamadı. Lütfen local deploy scriptini çalıştırın.
+        <div className="status-badge status-rejected" title="Deploy scriptini çalıştırın">
+          Config Hatası
         </div>
       )}
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {error && <div className="status-badge status-rejected" title={error}>Bağlantı Hatası</div>}
       
       {contractStatus === 'Deploy Edilmedi' && (
-        <div className="alert alert-error">
-          Bu adreste deploy edilmiş contract bulunamadı. Lütfen local deploy scriptini tekrar çalıştırın.
+        <div className="status-badge status-rejected" title="Local deploy scriptini tekrar çalıştırın">
+          Deploy Hatası
         </div>
       )}
 
       {isWrongNetwork && (
-        <div className="alert alert-warning">
-          Lütfen MetaMask üzerinde Hardhat Local Network ağına geçin. Chain ID: 31337
+        <div className="status-badge status-pending" title="Ağ ID: 31337 olmalı">
+          Yanlış Ağ
         </div>
       )}
 
       {!account ? (
         <button 
           className="btn btn-primary" 
+          style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
           onClick={connectWallet}
           disabled={isConnecting || !configValid}
         >
           {isConnecting ? 'Bağlanıyor...' : 'Cüzdanı Bağla'}
         </button>
       ) : (
-        <div className="wallet-info">
-          <span className="status-badge connected">Cüzdan Bağlandı</span>
-          <div className="wallet-details">
-            <p><strong>Kullanıcı Adresi:</strong> {formatAddress(account)}</p>
-            <p><strong>Rol:</strong> {account.toLowerCase() === (INTERMEDIARY_ADDRESS || '').toLowerCase() ? 'Aracı Kurum' : 'Normal Kullanıcı'}</p>
-            <p><strong>Ağ ID:</strong> {chainId}</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-color)', padding: '0.35rem 0.5rem 0.35rem 1rem', borderRadius: '999px', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: configValid && !isWrongNetwork ? 'var(--success-color)' : 'var(--danger-color)' }}></span>
+            <span style={{ fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-main)' }}>
+              {configValid && !isWrongNetwork ? 'Hazır' : 'Bağlı Değil'}
+            </span>
           </div>
-          
-          {/* Contract Connection Layer View */}
-          {configValid && !isWrongNetwork && (
-            <div className="contract-details" style={{ width: '100%', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)'}}>
-              <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Contract Durumu</h4>
-              <p><strong>Contract Adresi:</strong> {formatAddress(CONTRACT_ADDRESS)}</p>
-              <p><strong>Aracı Kurum:</strong> {formatAddress(INTERMEDIARY_ADDRESS)}</p>
-              <p><strong>Bağlantı:</strong> <span className={contractStatus === 'Hazır (Bağlı)' ? 'text-success' : 'text-error'} style={{ fontWeight: 'bold' }}>{contractStatus}</span></p>
-            </div>
-          )}
+          <div className="monospace-small" style={{ background: 'var(--card-bg)', padding: '0.25rem 0.75rem', borderRadius: '999px', border: '1px solid var(--border-color)' }}>
+            {formatAddress(account)}
+          </div>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { getReadOnlyContract } from '../utils/contractConnection';
 import { formatAddress } from '../utils/formatAddress';
+import { formatAmount } from '../utils/formatters';
 
 const IssuerSummary = ({ creatorAddress, account }) => {
   const [metrics, setMetrics] = useState(null);
@@ -35,7 +36,9 @@ const IssuerSummary = ({ creatorAddress, account }) => {
           pendingCount: 0,
           rejectedCount: 0,
           cancelledCount: 0,
-          successRate: "Veri yok"
+          successRate: "Veri yok",
+          paidTotalAmount: BigInt(0),
+          activeAmount: BigInt(0)
         });
         setIsLoading(false);
         return;
@@ -54,24 +57,37 @@ const IssuerSummary = ({ creatorAddress, account }) => {
       let rejectedCount = 0;
       let cancelledCount = 0;
       let pendingCount = 0;
+      let paidTotalAmount = BigInt(0);
+      let activeAmount = BigInt(0);
+
+      const nowUnix = Math.floor(Date.now() / 1000);
 
       createdCheques.forEach(c => {
         const status = Number(c.status);
+        const amount = BigInt(c.amount);
+        const dueDate = Number(c.dueDate);
+
         if (status === 5) {
           paidCount++;
+          paidTotalAmount += amount;
         } else if (status === 2) {
           rejectedCount++;
         } else if (status === 6) {
           cancelledCount++;
         } else if ([0, 1, 3, 4].includes(status)) {
           pendingCount++;
+          if (dueDate > nowUnix) {
+            activeAmount += amount;
+          }
         }
       });
 
       const totalCreated = createdCheques.length;
+      // Reddedilen ve iptal edilen çekler başarı oranına dahil edilmez
+      const relevantCount = totalCreated - rejectedCount - cancelledCount;
       let successRate = "Veri yok";
-      if (totalCreated > 0) {
-        successRate = ((paidCount / totalCreated) * 100).toFixed(1) + "%";
+      if (relevantCount > 0) {
+        successRate = ((paidCount / relevantCount) * 100).toFixed(1) + "%";
       }
 
       setMetrics({
@@ -80,7 +96,9 @@ const IssuerSummary = ({ creatorAddress, account }) => {
         pendingCount,
         rejectedCount,
         cancelledCount,
-        successRate
+        successRate,
+        paidTotalAmount,
+        activeAmount
       });
     } catch (err) {
       console.error("Error fetching issuer summary:", err);
@@ -102,7 +120,7 @@ const IssuerSummary = ({ creatorAddress, account }) => {
 
   return (
     <div className="issuer-summary-container">
-      <h4 className="summary-title">Çeki Oluşturan Özeti</h4>
+      <h4 className="summary-title">Keşideci Özeti</h4>
       <p className="summary-subtitle">Kişi: <span className="monospace-small">{formatAddress(creatorAddress)}</span></p>
       
       <div className="summary-grid">
@@ -129,6 +147,14 @@ const IssuerSummary = ({ creatorAddress, account }) => {
         <div className="summary-card">
           <span className="summary-card-label">İptal Edilen</span>
           <span className="summary-card-value muted">{metrics.cancelledCount}</span>
+        </div>
+        <div className="summary-card">
+          <span className="summary-card-label">Ödenen Toplam Tutar</span>
+          <span className="summary-card-value success">{formatAmount(metrics.paidTotalAmount)}</span>
+        </div>
+        <div className="summary-card">
+          <span className="summary-card-label">Aktif Çek Tutarı (Vadesi Gelmemiş)</span>
+          <span className="summary-card-value warning">{formatAmount(metrics.activeAmount)}</span>
         </div>
       </div>
 

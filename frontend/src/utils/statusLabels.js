@@ -2,8 +2,8 @@ export const STATUS_LABELS = {
   0: 'Onay Bekliyor',
   1: 'Aktif',
   2: 'Reddedildi',
-  3: 'Devir Bekliyor',
-  4: 'Ödemeye Gönderildi',
+  3: 'Ciro Bekliyor',
+  4: 'Tahsile Gönderildi',
   5: 'Ödendi',
   6: 'İptal Edildi'
 };

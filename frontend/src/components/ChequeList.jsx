@@ -6,7 +6,7 @@ import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
 
-const ChequeList = ({ account, isDeployed }) => {
+const ChequeList = ({ account, isDeployed, filterType = 'ceklerim' }) => {
   const [cheques, setCheques] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -16,7 +16,7 @@ const ChequeList = ({ account, isDeployed }) => {
     if (account && isConfigValid() && isDeployed) {
       fetchCheques();
     }
-  }, [account, isDeployed]);
+  }, [account, isDeployed, filterType]);
 
   const fetchCheques = async () => {
     // Trust the App-level isDeployed prop — WalletConnect already verified deployment.
@@ -49,7 +49,16 @@ const ChequeList = ({ account, isDeployed }) => {
       // Normalize ethers v6 Result objects into clean JS objects
       const normalizedCheques = fetchedCheques.map(normalizeCheque);
       
-      setCheques(normalizedCheques);
+      const filteredCheques = normalizedCheques.filter(cheque => {
+        if (filterType === 'ceklerim') {
+          return cheque.creator.toLowerCase() === account.toLowerCase();
+        } else if (filterType === 'alacaklarim') {
+          return cheque.creator.toLowerCase() !== account.toLowerCase();
+        }
+        return true;
+      });
+      
+      setCheques(filteredCheques);
     } catch (err) {
       console.error("Error reading from contract:", err);
       setError("Çekler okunurken teknik bir hata oluştu. Detaylar console ekranına yazdırıldı.");
@@ -66,7 +75,7 @@ const ChequeList = ({ account, isDeployed }) => {
   if (!account) {
     return (
       <div className="cheque-list-container">
-        <h3>Çeklerim</h3>
+        <h3>{filterType === 'ceklerim' ? 'Düzenlediğim Çekler' : 'Alacaklarım'}</h3>
         <p className="text-muted">Çekleri görüntülemek için cüzdanınızı bağlayın.</p>
       </div>
     );
@@ -75,7 +84,7 @@ const ChequeList = ({ account, isDeployed }) => {
   return (
     <div className="cheque-list-container">
       <div className="list-header">
-        <h3>Çeklerim</h3>
+        <h3>{filterType === 'ceklerim' ? 'Düzenlediğim Çekler' : 'Alacaklarım'}</h3>
         <button className="btn btn-small" onClick={fetchCheques} disabled={isLoading || !isDeployed}>
           {isLoading ? 'Yenileniyor...' : 'Yenile'}
         </button>

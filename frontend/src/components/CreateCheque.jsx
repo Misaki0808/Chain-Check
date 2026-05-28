@@ -44,7 +44,16 @@ const CreateCheque = ({ account, isDeployed }) => {
       }
 
       if (receiver.toLowerCase() === account.toLowerCase()) {
-        setError('Kendinize çek oluşturamazsınız.');
+        setError('Kendinize çek düzenleyemezsiniz.');
+        return;
+      }
+
+      // Vade tarihi bugünden sonra olmalı
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDate = new Date(dueDate);
+      if (selectedDate <= today) {
+        setError('Vade tarihi bugünden sonraki bir tarih olmalıdır. Geçmiş veya bugünkü tarih seçilemez, aksi takdirde çek hükümsüz olur.');
         return;
       }
 
@@ -74,7 +83,7 @@ const CreateCheque = ({ account, isDeployed }) => {
       const endTime = Date.now();
       const durationSeconds = ((endTime - startTime) / 1000).toFixed(2);
 
-      setSuccess('Çek başarıyla oluşturuldu.');
+      setSuccess('Çek başarıyla düzenlendi.');
       setTxDetails({
         hash: receipt.hash,
         duration: durationSeconds
@@ -92,7 +101,7 @@ const CreateCheque = ({ account, isDeployed }) => {
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
         setError('Kullanıcı işlemi reddetti.');
       } else {
-        setError('Çek oluşturulamadı. Lütfen bilgileri kontrol edin.');
+        setError('Çek düzenlenemedi. Lütfen bilgileri kontrol edin.');
       }
     } finally {
       setIsLoading(false);
@@ -107,7 +116,7 @@ const CreateCheque = ({ account, isDeployed }) => {
 
   return (
     <div className="create-cheque-container">
-      <h3>Yeni Çek Oluştur</h3>
+      <h3>Yeni Çek Düzenle</h3>
       
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
@@ -121,7 +130,7 @@ const CreateCheque = ({ account, isDeployed }) => {
 
       <form onSubmit={handleSubmit} className="create-cheque-form">
         <div className="form-group">
-          <label>İlk Alıcı Cüzdan Adresi (0x...)</label>
+          <label>Lehtar Cüzdan Adresi (0x...)</label>
           <input 
             type="text" 
             value={receiver} 
@@ -163,7 +172,7 @@ const CreateCheque = ({ account, isDeployed }) => {
         </div>
 
         <div className="form-group">
-          <label>Maskeli Alıcı Adı (Demo)</label>
+          <label>Maskeli Lehtar Adı (Demo)</label>
           <input 
             type="text" 
             value={maskedName} 
@@ -178,7 +187,7 @@ const CreateCheque = ({ account, isDeployed }) => {
           className="btn btn-primary" 
           disabled={isFormDisabled}
         >
-          {isLoading ? 'İşleniyor...' : 'Çek Oluştur'}
+          {isLoading ? 'İşleniyor...' : 'Çek Düzenle'}
         </button>
       </form>
     </div>

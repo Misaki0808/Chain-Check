@@ -62,7 +62,7 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       setPendingCheques(paymentRequestedCheques);
     } catch (err) {
       console.error("Error fetching payment requests:", err);
-      setError("Ödeme talepleri okunurken teknik bir hata oluştu. Detaylar console ekranına yazdırıldı.");
+      setError("Tahsil talepleri okunurken teknik bir hata oluştu. Detaylar console ekranına yazdırıldı.");
     } finally {
       setIsLoading(false);
     }
@@ -86,14 +86,14 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       </div>
 
       <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-        Ödeme talebi oluşturulmuş (Ödemeye Gönderildi) çekleri buradan yönetebilirsiniz.
+        Tahsil talebi oluşturulmuş (Ödemeye Gönderildi) çekleri buradan yönetebilirsiniz.
       </p>
 
       {error && <div className="alert alert-error">{error}</div>}
 
       {!isLoading && pendingCheques.length === 0 && !error && (
         <div className="empty-state">
-          <p>Bekleyen ödeme talebi bulunmuyor.</p>
+          <p>Bekleyen tahsil talebi bulunmuyor.</p>
         </div>
       )}
 
