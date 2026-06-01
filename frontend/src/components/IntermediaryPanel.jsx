@@ -33,7 +33,7 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       const signer = await provider.getSigner(account);
       const contract = getSignerContract(signer);
 
-      // Iterate total cheques to find payment requests
+      // Iterate total cheques to find payment requests and bounced cheques
       const counter = await contract.chequeCounter();
       const totalCheques = Number(counter);
 
@@ -43,7 +43,7 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
         return;
       }
 
-      // We need to check all cheques if they are in PaymentRequested status (4)
+      // We need to check all cheques if they are in PaymentRequested (4) or Bounced (7) status
       const chequePromises = [];
       for (let i = 1; i <= totalCheques; i++) {
         chequePromises.push(contract.getCheque(i));
@@ -53,13 +53,13 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       
       const normalizedCheques = allCheques.map(normalizeCheque);
 
-      // Filter only PaymentRequested (status === 4)
-      const paymentRequestedCheques = normalizedCheques.filter(c => c.status === 4);
+      // Filter PaymentRequested (4) and Bounced (7)
+      const relevantCheques = normalizedCheques.filter(c => c.status === 4 || c.status === 7);
       
       // Show newest first
-      paymentRequestedCheques.reverse();
+      relevantCheques.reverse();
       
-      setPendingCheques(paymentRequestedCheques);
+      setPendingCheques(relevantCheques);
     } catch (err) {
       console.error("Error fetching payment requests:", err);
       setError("Tahsil talepleri okunurken teknik bir hata oluştu. Detaylar console ekranına yazdırıldı.");

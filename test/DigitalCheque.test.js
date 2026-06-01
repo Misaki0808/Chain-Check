@@ -23,6 +23,7 @@ const Status = {
   PaymentRequested: 4,
   Paid: 5,
   Cancelled: 6,
+  Bounced: 7,
 };
 
 // Demo test data
@@ -924,6 +925,245 @@ describe("DigitalCheque", async function () {
       assert.equal(history[3].actor.toLowerCase(), newReceiverWallet.account.address.toLowerCase());   // TRANSFER_ACCEPTED
       assert.equal(history[4].actor.toLowerCase(), newReceiverWallet.account.address.toLowerCase());   // PAYMENT_REQUESTED
       assert.equal(history[5].actor.toLowerCase(), intermediaryWallet.account.address.toLowerCase());  // PAID
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // 17. Mark As Bounced
+  // ──────────────────────────────────────────────────────────────
+  describe("17. Mark As Bounced", async function () {
+    it("Should allow intermediary to mark cheque as bounced", async function () {
+      const { contract, receiverContract } = await deployCreateAndAccept();
+      await receiverContract.write.requestPayment([1n]);
+
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.markAsBounced([1n]);
+
+      const cheque = await contract.read.getCheque([1n]);
+      assert.equal(cheque.status, Status.Bounced);
+    });
+
+    it("Should emit ChequeBounced event", async function () {
+      const { contract, receiverContract } = await deployCreateAndAccept();
+      await receiverContract.write.requestPayment([1n]);
+
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+
+      await viem.assertions.emit(
+        intermediaryContract.write.markAsBounced([1n]),
+        intermediaryContract,
+        "ChequeBounced"
+      );
+    });
+
+    it("Should revert if non-intermediary tries to mark as bounced", async function () {
+      const { contract, receiverContract } = await deployCreateAndAccept();
+      await receiverContract.write.requestPayment([1n]);
+
+      await viem.assertions.revertWith(
+        receiverContract.write.markAsBounced([1n]),
+        "Only intermediary can perform this action"
+      );
+    });
+
+    it("Should revert if status is not PaymentRequested", async function () {
+      const { contract } = await deployCreateAndAccept();
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+
+      await viem.assertions.revertWith(
+        intermediaryContract.write.markAsBounced([1n]),
+        "Invalid cheque status"
+      );
+    });
+
+    it("Should record BOUNCED in history", async function () {
+      const { contract, receiverContract } = await deployCreateAndAccept();
+      await receiverContract.write.requestPayment([1n]);
+
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.markAsBounced([1n]);
+
+      const history = await contract.read.getChequeHistory([1n]);
+      const lastEntry = history[history.length - 1];
+      assert.equal(lastEntry.action, "BOUNCED");
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // 18. Ban / Unban Creator
+  // ──────────────────────────────────────────────────────────────
+  describe("18. Ban / Unban Creator", async function () {
+    it("Should allow intermediary to ban a creator", async function () {
+      const contract = await deployContract();
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.banCreator([creatorWallet.account.address]);
+
+      const isBanned = await contract.read.bannedCreators([creatorWallet.account.address]);
+      assert.equal(isBanned, true);
+    });
+
+    it("Should emit CreatorBanned event", async function () {
+      const contract = await deployContract();
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+
+      await viem.assertions.emit(
+        intermediaryContract.write.banCreator([creatorWallet.account.address]),
+        intermediaryContract,
+        "CreatorBanned"
+      );
+    });
+
+    it("Should allow intermediary to unban a creator", async function () {
+      const contract = await deployContract();
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.banCreator([creatorWallet.account.address]);
+      await intermediaryContract.write.unbanCreator([creatorWallet.account.address]);
+
+      const isBanned = await contract.read.bannedCreators([creatorWallet.account.address]);
+      assert.equal(isBanned, false);
+    });
+
+    it("Should revert if non-intermediary tries to ban", async function () {
+      const contract = await deployContract();
+      const creatorContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: creatorWallet } }
+      );
+
+      await viem.assertions.revertWith(
+        creatorContract.write.banCreator([firstReceiverWallet.account.address]),
+        "Only intermediary can perform this action"
+      );
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // 19. Banned Creator Cannot Create Cheques
+  // ──────────────────────────────────────────────────────────────
+  describe("19. Banned Creator Cannot Create Cheques", async function () {
+    it("Should revert if banned creator tries to create a cheque", async function () {
+      const contract = await deployContract();
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.banCreator([creatorWallet.account.address]);
+
+      const creatorContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: creatorWallet } }
+      );
+
+      await viem.assertions.revertWith(
+        creatorContract.write.createCheque([
+          firstReceiverWallet.account.address,
+          AMOUNT,
+          DUE_DATE,
+          IDENTITY_HASH,
+          MASKED_NAME,
+        ]),
+        "Creator is banned from creating cheques"
+      );
+    });
+
+    it("Should allow unbanned creator to create a cheque again", async function () {
+      const contract = await deployContract();
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.banCreator([creatorWallet.account.address]);
+      await intermediaryContract.write.unbanCreator([creatorWallet.account.address]);
+
+      const creatorContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: creatorWallet } }
+      );
+      await creatorContract.write.createCheque([
+        firstReceiverWallet.account.address,
+        AMOUNT,
+        DUE_DATE,
+        IDENTITY_HASH,
+        MASKED_NAME,
+      ]);
+
+      const counter = await contract.read.chequeCounter();
+      assert.equal(counter, 1n);
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // 20. Bounced As Final State
+  // ──────────────────────────────────────────────────────────────
+  describe("20. Bounced As Final State", async function () {
+    it("Should not allow transfer on a Bounced cheque", async function () {
+      const { contract, receiverContract } = await deployCreateAndAccept();
+      await receiverContract.write.requestPayment([1n]);
+
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.markAsBounced([1n]);
+
+      await viem.assertions.revertWith(
+        receiverContract.write.requestTransfer([
+          1n,
+          newReceiverWallet.account.address,
+        ]),
+        "Invalid cheque status"
+      );
+    });
+
+    it("Should not allow payment request on a Bounced cheque", async function () {
+      const { contract, receiverContract } = await deployCreateAndAccept();
+      await receiverContract.write.requestPayment([1n]);
+
+      const intermediaryContract = await viem.getContractAt(
+        "DigitalCheque",
+        contract.address,
+        { client: { wallet: intermediaryWallet } }
+      );
+      await intermediaryContract.write.markAsBounced([1n]);
+
+      await viem.assertions.revertWith(
+        receiverContract.write.requestPayment([1n]),
+        "Invalid cheque status"
+      );
     });
   });
 });

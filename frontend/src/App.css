@@ -516,6 +516,17 @@ h1, h2, h3, h4, h5 {
 .status-payment { background-color: #fdf4ff; color: #a21caf; }
 .status-paid { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
 .status-cancelled { background-color: #f1f5f9; color: #475569; }
+.status-bounced { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* Clickable Summary Card */
+.clickable-card {
+  cursor: pointer;
+  position: relative;
+}
+.clickable-card:hover {
+  border-color: var(--primary-color) !important;
+  box-shadow: var(--shadow-hover) !important;
+}
 
 /* Summary Grids */
 .summary-grid {

@@ -100,6 +100,8 @@ const CreateCheque = ({ account, isDeployed }) => {
       console.error(err);
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
         setError('Kullanıcı işlemi reddetti.');
+      } else if (err.message && err.message.includes('Creator is banned')) {
+        setError('Çek yasaklanmış bir keşideci olarak düzenlenemez. Aracı kurum tarafından yasaklandınız.');
       } else {
         setError('Çek düzenlenemedi. Lütfen bilgileri kontrol edin.');
       }

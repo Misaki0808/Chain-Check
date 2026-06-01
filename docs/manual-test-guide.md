@@ -810,6 +810,5 @@ alacaklarım(adıma düzenlenen veya cirolanan çekler burada görünsün)
 
 ödemeye gönder yerine tahsile gönder yazsın
 
-aracı kurum ekranında çeki tahsil edildi veya yazıldı(ödenmedi) olmalı
 
 sol paneldeki sekmeleirn yanı sıra ortadaki boş alanda kişinin özeti görünsün

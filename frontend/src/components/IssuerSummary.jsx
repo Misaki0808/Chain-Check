@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { getReadOnlyContract } from '../utils/contractConnection';
 import { formatAddress } from '../utils/formatAddress';
-import { formatAmount } from '../utils/formatters';
+import { formatAmount, formatDate } from '../utils/formatters';
 
 const IssuerSummary = ({ creatorAddress, account }) => {
   const [metrics, setMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPaidDetails, setShowPaidDetails] = useState(false);
 
   useEffect(() => {
     if (creatorAddress) {
@@ -34,11 +35,11 @@ const IssuerSummary = ({ creatorAddress, account }) => {
           totalCreated: 0,
           paidCount: 0,
           pendingCount: 0,
-          rejectedCount: 0,
-          cancelledCount: 0,
+          bouncedCount: 0,
           successRate: "Veri yok",
           paidTotalAmount: BigInt(0),
-          activeAmount: BigInt(0)
+          bouncedTotalAmount: BigInt(0),
+          paidCheques: []
         });
         setIsLoading(false);
         return;
@@ -54,37 +55,47 @@ const IssuerSummary = ({ creatorAddress, account }) => {
       );
 
       let paidCount = 0;
-      let rejectedCount = 0;
-      let cancelledCount = 0;
+      let bouncedCount = 0;
       let pendingCount = 0;
       let paidTotalAmount = BigInt(0);
-      let activeAmount = BigInt(0);
-
-      const nowUnix = Math.floor(Date.now() / 1000);
+      let bouncedTotalAmount = BigInt(0);
+      const paidCheques = [];
 
       createdCheques.forEach(c => {
         const status = Number(c.status);
         const amount = BigInt(c.amount);
-        const dueDate = Number(c.dueDate);
+
+        // Reddedilen (2) ve İptal Edilen (6) çekleri tamamen atla
+        if (status === 2 || status === 6) return;
 
         if (status === 5) {
           paidCount++;
           paidTotalAmount += amount;
-        } else if (status === 2) {
-          rejectedCount++;
-        } else if (status === 6) {
-          cancelledCount++;
+          paidCheques.push({
+            id: c.id ? c.id.toString() : '0',
+            amount: c.amount ? c.amount.toString() : '0',
+            dueDate: c.dueDate ? Number(c.dueDate) : 0,
+            updatedAt: c.updatedAt ? Number(c.updatedAt) : 0
+          });
+        } else if (status === 7) {
+          bouncedCount++;
+          bouncedTotalAmount += amount;
         } else if ([0, 1, 3, 4].includes(status)) {
           pendingCount++;
-          if (dueDate > nowUnix) {
-            activeAmount += amount;
-          }
         }
       });
 
-      const totalCreated = createdCheques.length;
-      // Reddedilen ve iptal edilen çekler başarı oranına dahil edilmez
-      const relevantCount = totalCreated - rejectedCount - cancelledCount;
+      // Ödenen çekleri tarihe göre sırala
+      paidCheques.sort((a, b) => b.updatedAt - a.updatedAt);
+
+      // totalCreated: reddedilen ve iptal edilenler hariç
+      const totalCreated = createdCheques.filter(c => {
+        const s = Number(c.status);
+        return s !== 2 && s !== 6;
+      }).length;
+
+      // Başarı oranı: paid / (paid + bounced + pending)
+      const relevantCount = totalCreated;
       let successRate = "Veri yok";
       if (relevantCount > 0) {
         successRate = ((paidCount / relevantCount) * 100).toFixed(1) + "%";
@@ -94,11 +105,11 @@ const IssuerSummary = ({ creatorAddress, account }) => {
         totalCreated,
         paidCount,
         pendingCount,
-        rejectedCount,
-        cancelledCount,
+        bouncedCount,
         successRate,
         paidTotalAmount,
-        activeAmount
+        bouncedTotalAmount,
+        paidCheques
       });
     } catch (err) {
       console.error("Error fetching issuer summary:", err);
@@ -109,7 +120,7 @@ const IssuerSummary = ({ creatorAddress, account }) => {
   };
 
   if (isLoading) {
-    return <div className="loading-msg" style={{ marginTop: '1.5rem' }}>Oluşturan özeti yükleniyor...</div>;
+    return <div className="loading-msg" style={{ marginTop: '1.5rem' }}>Olusturan özeti yükleniyor...</div>;
   }
 
   if (error) {
@@ -140,23 +151,64 @@ const IssuerSummary = ({ creatorAddress, account }) => {
           <span className="summary-card-label">Devam Eden</span>
           <span className="summary-card-value warning">{metrics.pendingCount}</span>
         </div>
-        <div className="summary-card">
-          <span className="summary-card-label">Reddedilen</span>
-          <span className="summary-card-value error">{metrics.rejectedCount}</span>
-        </div>
-        <div className="summary-card">
-          <span className="summary-card-label">İptal Edilen</span>
-          <span className="summary-card-value muted">{metrics.cancelledCount}</span>
-        </div>
-        <div className="summary-card">
-          <span className="summary-card-label">Ödenen Toplam Tutar</span>
+        <div 
+          className="summary-card clickable-card"
+          onClick={() => metrics.paidCheques.length > 0 && setShowPaidDetails(!showPaidDetails)}
+          style={{ cursor: metrics.paidCheques.length > 0 ? 'pointer' : 'default' }}
+          title={metrics.paidCheques.length > 0 ? 'Detayları görmek için tıklayın' : ''}
+        >
+          <span className="summary-card-label">
+            Ödenen Toplam Tutar
+            {metrics.paidCheques.length > 0 && <span style={{ fontSize: '0.75rem', marginLeft: '0.25rem' }}>{showPaidDetails ? '▲' : '▼'}</span>}
+          </span>
           <span className="summary-card-value success">{formatAmount(metrics.paidTotalAmount)}</span>
         </div>
-        <div className="summary-card">
-          <span className="summary-card-label">Aktif Çek Tutarı (Vadesi Gelmemiş)</span>
-          <span className="summary-card-value warning">{formatAmount(metrics.activeAmount)}</span>
-        </div>
+        {metrics.bouncedCount > 0 && (
+          <>
+            <div className="summary-card">
+              <span className="summary-card-label">Arkası Yazılan Çek</span>
+              <span className="summary-card-value error">{metrics.bouncedCount}</span>
+            </div>
+            <div className="summary-card">
+              <span className="summary-card-label">Arkası Yazılan Toplam Tutar</span>
+              <span className="summary-card-value error">{formatAmount(metrics.bouncedTotalAmount)}</span>
+            </div>
+          </>
+        )}
       </div>
+
+      {/* Ödenen çek detayları — tıklanınca açılır */}
+      {showPaidDetails && metrics.paidCheques.length > 0 && (
+        <div className="paid-details-panel" style={{
+          marginTop: '1rem',
+          padding: '1rem 1.25rem',
+          background: 'var(--primary-light)',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border-color)'
+        }}>
+          <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--text-main)', fontSize: '0.95rem' }}>Ödenen Çek Detayları</h4>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                <th style={{ textAlign: 'left', padding: '0.5rem', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem', textTransform: 'uppercase' }}>Çek ID</th>
+                <th style={{ textAlign: 'right', padding: '0.5rem', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem', textTransform: 'uppercase' }}>Tutar</th>
+                <th style={{ textAlign: 'center', padding: '0.5rem', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem', textTransform: 'uppercase' }}>Vade Tarihi</th>
+                <th style={{ textAlign: 'center', padding: '0.5rem', color: 'var(--text-muted)', fontWeight: '600', fontSize: '0.8rem', textTransform: 'uppercase' }}>Ödeme Tarihi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {metrics.paidCheques.map(pc => (
+                <tr key={pc.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '0.5rem', fontWeight: '600' }}>#{pc.id}</td>
+                  <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: '600', color: 'var(--primary-color)' }}>{formatAmount(pc.amount)}</td>
+                  <td style={{ padding: '0.5rem', textAlign: 'center' }}>{formatDate(pc.dueDate)}</td>
+                  <td style={{ padding: '0.5rem', textAlign: 'center', color: 'var(--success-text)' }}>{formatDate(pc.updatedAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <p className="summary-hint">
         Bu özet, çeki oluşturan adresin blockchain üzerindeki demo çek geçmişinden hesaplanır. Gerçek finansal skor değildir.

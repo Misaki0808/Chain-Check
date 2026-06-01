@@ -18,7 +18,8 @@ contract DigitalCheque {
         TransferPending,   // 3 — Devir Bekliyor
         PaymentRequested,  // 4 — Ödemeye Gönderildi
         Paid,              // 5 — Ödendi              (final)
-        Cancelled          // 6 — İptal Edildi         (final)
+        Cancelled,         // 6 — İptal Edildi         (final)
+        Bounced            // 7 — Arkası Yazıldı       (final)
     }
 
     // ───────────────────────── Structs ─────────────────────────
@@ -53,6 +54,7 @@ contract DigitalCheque {
     mapping(uint256 => Cheque) public cheques;
     mapping(address => uint256[]) private userCheques;
     mapping(uint256 => HistoryItem[]) private chequeHistories;
+    mapping(address => bool) public bannedCreators;
 
     // ───────────────────────── Events ─────────────────────────
 
@@ -82,6 +84,12 @@ contract DigitalCheque {
     event ChequePaid(uint256 indexed chequeId, address indexed intermediaryAddr);
 
     event ChequeCancelled(uint256 indexed chequeId, string reason);
+
+    event ChequeBounced(uint256 indexed chequeId, address indexed creator);
+
+    event CreatorBanned(address indexed creator);
+
+    event CreatorUnbanned(address indexed creator);
 
     // ───────────────────────── Modifiers ─────────────────────────
 
@@ -120,6 +128,7 @@ contract DigitalCheque {
         string memory _identityHash,
         string memory _maskedReceiverName
     ) external returns (uint256) {
+        require(!bannedCreators[msg.sender], "Creator is banned from creating cheques");
         require(_firstReceiver != address(0), "Invalid receiver address");
         require(_firstReceiver != msg.sender, "Creator cannot be the first receiver");
         require(_amount > 0, "Amount must be greater than zero");
@@ -303,6 +312,43 @@ contract DigitalCheque {
         _addHistory(chequeId, msg.sender, "PAID");
 
         emit ChequePaid(chequeId, msg.sender);
+    }
+
+    /**
+     * @notice Intermediary marks cheque as bounced. Status → Bounced (final).
+     * @param chequeId  The ID of the cheque to mark as bounced.
+     */
+    function markAsBounced(uint256 chequeId) external chequeExists(chequeId) onlyIntermediary {
+        Cheque storage c = cheques[chequeId];
+
+        require(c.status == ChequeStatus.PaymentRequested, "Invalid cheque status");
+
+        c.status = ChequeStatus.Bounced;
+        c.updatedAt = block.timestamp;
+
+        _addHistory(chequeId, msg.sender, "BOUNCED");
+
+        emit ChequeBounced(chequeId, c.creator);
+    }
+
+    /**
+     * @notice Intermediary bans a creator from creating new cheques.
+     * @param creator  The wallet address of the creator to ban.
+     */
+    function banCreator(address creator) external onlyIntermediary {
+        require(creator != address(0), "Invalid address");
+        bannedCreators[creator] = true;
+        emit CreatorBanned(creator);
+    }
+
+    /**
+     * @notice Intermediary unbans a creator, allowing them to create cheques again.
+     * @param creator  The wallet address of the creator to unban.
+     */
+    function unbanCreator(address creator) external onlyIntermediary {
+        require(creator != address(0), "Invalid address");
+        bannedCreators[creator] = false;
+        emit CreatorUnbanned(creator);
     }
 
     // ───────────────────────── Read Functions ─────────────────────────

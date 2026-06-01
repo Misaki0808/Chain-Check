@@ -5,7 +5,8 @@ export const STATUS_LABELS = {
   3: 'Ciro Bekliyor',
   4: 'Tahsile Gönderildi',
   5: 'Ödendi',
-  6: 'İptal Edildi'
+  6: 'İptal Edildi',
+  7: 'Arkası Yazıldı'
 };
 
 export const STATUS_CLASSES = {
@@ -15,7 +16,8 @@ export const STATUS_CLASSES = {
   3: 'status-transfer',
   4: 'status-payment',
   5: 'status-paid',
-  6: 'status-cancelled'
+  6: 'status-cancelled',
+  7: 'status-bounced'
 };
 
 export function getStatusLabel(statusIndex) {

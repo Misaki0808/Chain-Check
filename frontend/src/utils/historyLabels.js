@@ -7,7 +7,8 @@ export const HISTORY_LABELS = {
   'TRANSFER_REJECTED': 'Ciro reddedildi',
   'PAYMENT_REQUESTED': 'Tahsil talebi başlatıldı',
   'PAID': 'Çek tahsil edildi',
-  'CANCELLED': 'Çek iptal edildi'
+  'CANCELLED': 'Çek iptal edildi',
+  'BOUNCED': 'Çek ödenemedi (arkası yazıldı)'
 };
 
 export function getHistoryLabel(actionCode) {

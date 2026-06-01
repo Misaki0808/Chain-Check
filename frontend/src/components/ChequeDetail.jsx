@@ -41,6 +41,8 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
   const canAcceptOrRejectTransfer = isTransferPending && isPendingReceiverUser;
   const canRequestPayment = isActive && isCurrentOwner;
   const canMarkAsPaid = isPaymentRequested && isIntermediary;
+  const canMarkAsBounced = isPaymentRequested && isIntermediary;
+  const isBounced = Number(cheque.status) === 7;
 
   const isActionDisabled = isLoading || !isDeployed;
 
@@ -96,6 +98,10 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
         tx = await contract.requestPayment(cheque.id);
       } else if (actionType === 'markAsPaid') {
         tx = await contract.markAsPaid(cheque.id);
+      } else if (actionType === 'markAsBounced') {
+        tx = await contract.markAsBounced(cheque.id);
+      } else if (actionType === 'banCreator') {
+        tx = await contract.banCreator(cheque.creator);
       }
 
       setLoadingMsg('Blockchain onayı bekleniyor... İşlem Hash: ' + tx.hash);
@@ -120,6 +126,8 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       if (actionType === 'rejectTransfer') successMsg = 'Ciro reddedildi.';
       if (actionType === 'requestPayment') successMsg = 'Tahsil talebi başlatıldı.';
       if (actionType === 'markAsPaid') successMsg = 'Çek tahsil edildi.';
+      if (actionType === 'markAsBounced') successMsg = 'Çek ödenemedi olarak işaretlendi (arkası yazıldı).';
+      if (actionType === 'banCreator') successMsg = 'Keşideci yasaklandı. Artık yeni çek düzenleyemez.';
 
       setSuccess(successMsg);
       setTxDetails({
@@ -200,10 +208,18 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
         </div>
       )}
 
-      {/* Intermediary Payment */}
+      {/* Intermediary Payment — Tahsil Edildi + Ödenemedi */}
       {canMarkAsPaid && !success && (
+        <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+          <button className="btn btn-success" style={{ flex: 1 }} onClick={() => handleAction('markAsPaid')} disabled={isActionDisabled}>Tahsil Edildi</button>
+          <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => handleAction('markAsBounced')} disabled={isActionDisabled}>Ödenemedi</button>
+        </div>
+      )}
+
+      {/* Intermediary — Keşideciyi Yasakla (bounced çek sonrası) */}
+      {isBounced && isIntermediary && !success && (
         <div className="action-buttons" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-success" style={{ width: '100%' }} onClick={() => handleAction('markAsPaid')} disabled={isActionDisabled}>Tahsil Edildi</button>
+          <button className="btn btn-danger" style={{ width: '100%' }} onClick={() => handleAction('banCreator')} disabled={isActionDisabled}>Keşideciyi Yasakla</button>
         </div>
       )}
 
