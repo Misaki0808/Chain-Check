@@ -333,11 +333,29 @@ contract DigitalCheque {
 
     /**
      * @notice Intermediary bans a creator from creating new cheques.
+     *         All active/pending cheques where this address is the creator
+     *         are automatically cancelled.
      * @param creator  The wallet address of the creator to ban.
      */
     function banCreator(address creator) external onlyIntermediary {
         require(creator != address(0), "Invalid address");
         bannedCreators[creator] = true;
+
+        // Cancel all non-final cheques where this address is the creator
+        for (uint256 i = 1; i <= chequeCounter; i++) {
+            Cheque storage c = cheques[i];
+            if (c.creator == creator) {
+                uint8 s = uint8(c.status);
+                // Non-final statuses: 0=PendingApproval, 1=Active, 3=TransferPending, 4=PaymentRequested
+                if (s == 0 || s == 1 || s == 3 || s == 4) {
+                    c.status = ChequeStatus.Cancelled;
+                    c.updatedAt = block.timestamp;
+                    _addHistory(i, msg.sender, "BAN_CANCELLED");
+                    emit ChequeCancelled(i, "Creator banned by intermediary");
+                }
+            }
+        }
+
         emit CreatorBanned(creator);
     }
 

@@ -38,6 +38,7 @@ const IssuerSummary = ({ creatorAddress, account }) => {
           bouncedCount: 0,
           successRate: "Veri yok",
           paidTotalAmount: BigInt(0),
+          pendingTotalAmount: BigInt(0),
           bouncedTotalAmount: BigInt(0),
           paidCheques: []
         });
@@ -58,6 +59,7 @@ const IssuerSummary = ({ creatorAddress, account }) => {
       let bouncedCount = 0;
       let pendingCount = 0;
       let paidTotalAmount = BigInt(0);
+      let pendingTotalAmount = BigInt(0);
       let bouncedTotalAmount = BigInt(0);
       const paidCheques = [];
 
@@ -82,6 +84,7 @@ const IssuerSummary = ({ creatorAddress, account }) => {
           bouncedTotalAmount += amount;
         } else if ([0, 1, 3, 4].includes(status)) {
           pendingCount++;
+          pendingTotalAmount += amount;
         }
       });
 
@@ -108,6 +111,7 @@ const IssuerSummary = ({ creatorAddress, account }) => {
         bouncedCount,
         successRate,
         paidTotalAmount,
+        pendingTotalAmount,
         bouncedTotalAmount,
         paidCheques
       });
@@ -149,7 +153,8 @@ const IssuerSummary = ({ creatorAddress, account }) => {
         </div>
         <div className="summary-card">
           <span className="summary-card-label">Devam Eden</span>
-          <span className="summary-card-value warning">{metrics.pendingCount}</span>
+          <span className="summary-card-value warning">{metrics.pendingCount > 0 ? `${metrics.pendingCount} çek` : '—'}</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{formatAmount(metrics.pendingTotalAmount)}</span>
         </div>
         <div 
           className="summary-card clickable-card"
