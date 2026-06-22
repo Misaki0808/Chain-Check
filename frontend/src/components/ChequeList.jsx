@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import { getReadOnlyContract, isConfigValid, normalizeCheque } from '../utils/contractConnection';
+import { getActiveProvider } from '../utils/walletSession';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
 
-const ChequeList = ({ account, isDeployed, filterType = 'ceklerim' }) => {
+const ChequeList = ({ account, isDeployed, filterType = 'ceklerim', autoExpandId = null, refreshSignal = 0, demoHighlight = null, demoTransferTo = null }) => {
   const [cheques, setCheques] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -16,7 +16,14 @@ const ChequeList = ({ account, isDeployed, filterType = 'ceklerim' }) => {
     if (account && isConfigValid() && isDeployed) {
       fetchCheques();
     }
-  }, [account, isDeployed, filterType]);
+  }, [account, isDeployed, filterType, refreshSignal]);
+
+  // Otomatik tanıtım: ilgili çeki otomatik aç
+  useEffect(() => {
+    if (autoExpandId && cheques.some((c) => c.id.toString() === autoExpandId.toString())) {
+      setExpandedChequeId(autoExpandId.toString());
+    }
+  }, [autoExpandId, cheques]);
 
   const fetchCheques = async () => {
     // Trust the App-level isDeployed prop — WalletConnect already verified deployment.
@@ -28,7 +35,7 @@ const ChequeList = ({ account, isDeployed, filterType = 'ceklerim' }) => {
       setIsLoading(true);
       setError('');
       
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = getActiveProvider();
       const contract = getReadOnlyContract(provider);
 
       // Fetch user's cheque IDs
@@ -129,11 +136,13 @@ const ChequeList = ({ account, isDeployed, filterType = 'ceklerim' }) => {
 
               {isExpanded && (
                 <div className="cheque-card-expanded">
-                  <ChequeDetail 
-                    cheque={cheque} 
-                    account={account} 
-                    onRefresh={fetchCheques} 
+                  <ChequeDetail
+                    cheque={cheque}
+                    account={account}
+                    onRefresh={fetchCheques}
                     isDeployed={isDeployed}
+                    demoHighlight={demoHighlight}
+                    demoTransferTo={demoTransferTo}
                   />
                 </div>
               )}

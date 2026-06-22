@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
-import { getSignerContract, INTERMEDIARY_ADDRESS, isConfigValid, normalizeCheque } from '../utils/contractConnection';
+import { getReadOnlyContract, INTERMEDIARY_ADDRESS, isConfigValid, normalizeCheque } from '../utils/contractConnection';
+import { getActiveProvider } from '../utils/walletSession';
 import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
 
-const IntermediaryPanel = ({ account, isDeployed }) => {
+const IntermediaryPanel = ({ account, isDeployed, autoExpandId = null, refreshSignal = 0, demoHighlight = null }) => {
   const [pendingCheques, setPendingCheques] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +20,14 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
     if (account && isConfigValid() && isIntermediary && isDeployed) {
       fetchPaymentRequests();
     }
-  }, [account, isIntermediary, isDeployed]);
+  }, [account, isIntermediary, isDeployed, refreshSignal]);
+
+  // Otomatik tanıtım: ilgili çeki otomatik aç
+  useEffect(() => {
+    if (autoExpandId && pendingCheques.some((c) => c.id.toString() === autoExpandId.toString())) {
+      setExpandedChequeId(autoExpandId.toString());
+    }
+  }, [autoExpandId, pendingCheques]);
 
   const fetchPaymentRequests = async () => {
     if (!isDeployed) return;
@@ -29,9 +36,8 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
       setIsLoading(true);
       setError('');
       
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner(account);
-      const contract = getSignerContract(signer);
+      const provider = getActiveProvider();
+      const contract = getReadOnlyContract(provider);
 
       // Iterate total cheques to find payment requests and bounced cheques
       const counter = await contract.chequeCounter();
@@ -128,11 +134,12 @@ const IntermediaryPanel = ({ account, isDeployed }) => {
 
               {isExpanded && (
                 <div className="cheque-card-expanded">
-                  <ChequeDetail 
-                    cheque={cheque} 
-                    account={account} 
+                  <ChequeDetail
+                    cheque={cheque}
+                    account={account}
                     onRefresh={fetchPaymentRequests}
                     isDeployed={isDeployed}
+                    demoHighlight={demoHighlight}
                   />
                 </div>
               )}

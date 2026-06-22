@@ -1,21 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
 import { getSignerContract, INTERMEDIARY_ADDRESS } from '../utils/contractConnection';
+import { getActiveSigner } from '../utils/walletSession';
 import StatusBadge from './StatusBadge';
 import HistoryTimeline from './HistoryTimeline';
 import IssuerSummary from './IssuerSummary';
 
-const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
+const ChequeDetail = ({ cheque, account, onRefresh, isDeployed, demoHighlight = null, demoTransferTo = null }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [txDetails, setTxDetails] = useState(null);
-  
+
   // Transfer request specific state
   const [newReceiver, setNewReceiver] = useState('');
+
+  // Otomatik tanıtım: ciro alıcısını önceden doldur
+  useEffect(() => {
+    if (demoTransferTo) setNewReceiver(demoTransferTo);
+  }, [demoTransferTo]);
 
   if (!cheque) return null;
 
@@ -76,9 +82,7 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       setIsLoading(true);
       setLoadingMsg('MetaMask onayı bekleniyor...');
 
-      if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner(account);
+      const signer = await getActiveSigner(account);
       const contract = getSignerContract(signer);
 
       const startTime = Date.now();
@@ -172,14 +176,14 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       {/* Initial Accept / Reject */}
       {canAcceptOrRejectInitial && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-primary" onClick={() => handleAction('accept')} disabled={isActionDisabled}>Kabul Et</button>
+          <button className={`btn btn-primary ${demoHighlight === 'accept' ? 'demo-pulse' : ''}`} onClick={() => handleAction('accept')} disabled={isActionDisabled}>Kabul Et</button>
           <button className="btn btn-danger" onClick={() => handleAction('reject')} disabled={isActionDisabled}>Reddet</button>
         </div>
       )}
 
       {/* Transfer Request Form & Request Payment */}
       {isActive && isCurrentOwner && !success && (
-        <div className="action-form" style={{ marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+        <div className="action-form" style={{ flexDirection: 'column', alignItems: 'stretch', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
           <h4 style={{ marginTop: 0, marginBottom: '0.75rem', color: 'var(--text-main)' }}>İşlemler</h4>
           
           <div className="form-group" style={{ flexDirection: 'row', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
@@ -191,11 +195,11 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
               style={{ flex: 1 }}
               disabled={isActionDisabled}
             />
-            <button className="btn btn-primary" onClick={() => handleAction('requestTransfer')} disabled={isActionDisabled}>Ciro Et</button>
+            <button className={`btn btn-primary ${demoHighlight === 'transfer-submit' ? 'demo-pulse' : ''}`} onClick={() => handleAction('requestTransfer')} disabled={isActionDisabled}>Ciro Et</button>
           </div>
 
           <div className="action-buttons">
-            <button className="btn btn-warning" style={{ width: '100%' }} onClick={() => handleAction('requestPayment')} disabled={isActionDisabled}>Tahsile Gönder</button>
+            <button className={`btn btn-warning ${demoHighlight === 'request-payment' ? 'demo-pulse' : ''}`} style={{ width: '100%' }} onClick={() => handleAction('requestPayment')} disabled={isActionDisabled}>Tahsile Gönder</button>
           </div>
         </div>
       )}
@@ -203,7 +207,7 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       {/* Transfer Accept / Reject */}
       {canAcceptOrRejectTransfer && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-primary" onClick={() => handleAction('acceptTransfer')} disabled={isActionDisabled}>Ciroyu Kabul Et</button>
+          <button className={`btn btn-primary ${demoHighlight === 'accept-transfer' ? 'demo-pulse' : ''}`} onClick={() => handleAction('acceptTransfer')} disabled={isActionDisabled}>Ciroyu Kabul Et</button>
           <button className="btn btn-danger" onClick={() => handleAction('rejectTransfer')} disabled={isActionDisabled}>Ciroyu Reddet</button>
         </div>
       )}
@@ -211,7 +215,7 @@ const ChequeDetail = ({ cheque, account, onRefresh, isDeployed }) => {
       {/* Intermediary Payment — Tahsil Edildi + Ödenemedi */}
       {canMarkAsPaid && !success && (
         <div className="action-buttons" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border-color)' }}>
-          <button className="btn btn-success" style={{ flex: 1 }} onClick={() => handleAction('markAsPaid')} disabled={isActionDisabled}>Tahsil Edildi</button>
+          <button className={`btn btn-success ${demoHighlight === 'mark-paid' ? 'demo-pulse' : ''}`} style={{ flex: 1 }} onClick={() => handleAction('markAsPaid')} disabled={isActionDisabled}>Tahsil Edildi</button>
           <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => handleAction('markAsBounced')} disabled={isActionDisabled}>Ödenemedi</button>
         </div>
       )}

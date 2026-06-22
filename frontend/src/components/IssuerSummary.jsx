@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import { getReadOnlyContract } from '../utils/contractConnection';
+import { getActiveProvider } from '../utils/walletSession';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
 
@@ -21,9 +21,8 @@ const IssuerSummary = ({ creatorAddress, account }) => {
       setIsLoading(true);
       setError('');
 
-      if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      
+      const provider = getActiveProvider();
+
       // Use getReadOnlyContract to read data purely from provider
       const contract = getReadOnlyContract(provider);
 

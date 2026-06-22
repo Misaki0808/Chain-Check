@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import { getReadOnlyContract, isConfigValid, normalizeCheque, CONTRACT_ADDRESS, INTERMEDIARY_ADDRESS, CHAIN_ID } from '../utils/contractConnection';
+import { getActiveProvider } from '../utils/walletSession';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
 
-const UserSummary = ({ account, isDeployed }) => {
+const UserSummary = ({ account, isDeployed, refreshSignal = 0 }) => {
   const [metrics, setMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -14,15 +14,14 @@ const UserSummary = ({ account, isDeployed }) => {
     if (account && isConfigValid() && isDeployed) {
       fetchSummary();
     }
-  }, [account, isDeployed]);
+  }, [account, isDeployed, refreshSignal]);
 
   const fetchSummary = async () => {
     try {
       setIsLoading(true);
       setError('');
 
-      if (!window.ethereum) throw new Error("MetaMask bulunamadı.");
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = getActiveProvider();
       const contract = getReadOnlyContract(provider);
 
       const chequeIds = await contract.getUserCheques(account);
