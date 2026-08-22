@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { getSignerContract, isConfigValid } from '../utils/contractConnection';
 import { getActiveSigner } from '../utils/walletSession';
 
-const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSignal = 0, demoHighlight = null, demoActiveField = null }) => {
+const CreateCheque = ({ account, isDeployed }) => {
   const [receiver, setReceiver] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -14,27 +14,6 @@ const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSigna
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [txDetails, setTxDetails] = useState(null);
-
-  // Otomatik tanıtım: formu önceden doldur
-  useEffect(() => {
-    if (demoPrefill) {
-      setReceiver(demoPrefill.receiver || '');
-      setAmount(demoPrefill.amount || '');
-      setDueDate(demoPrefill.dueDate || '');
-      setIdentityHash(demoPrefill.identityHash || '');
-      setMaskedName(demoPrefill.maskedName || '');
-      setSuccess('');
-      setError('');
-      setTxDetails(null);
-    }
-  }, [demoPrefill]);
-
-  // Otomatik tanıtım: sinyal gelince formu gönder
-  useEffect(() => {
-    if (demoSubmitSignal > 0) {
-      handleSubmit();
-    }
-  }, [demoSubmitSignal]);
 
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -156,7 +135,6 @@ const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSigna
           <label>Lehtar Cüzdan Adresi (0x...)</label>
           <input
             type="text"
-            className={demoActiveField === 'receiver' ? 'demo-typing' : ''}
             value={receiver}
             onChange={(e) => setReceiver(e.target.value)}
             disabled={isFormDisabled}
@@ -167,7 +145,6 @@ const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSigna
           <label>Tutar (₺)</label>
           <input
             type="number"
-            className={demoActiveField === 'amount' ? 'demo-typing' : ''}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             min="1"
@@ -179,7 +156,6 @@ const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSigna
           <label>Vade Tarihi</label>
           <input
             type="date"
-            className={demoActiveField === 'dueDate' ? 'demo-typing' : ''}
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
             disabled={isFormDisabled}
@@ -190,7 +166,6 @@ const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSigna
           <label>Kimlik Hash (Demo: Herhangi bir metin)</label>
           <input
             type="text"
-            className={demoActiveField === 'identityHash' ? 'demo-typing' : ''}
             value={identityHash}
             onChange={(e) => setIdentityHash(e.target.value)}
             placeholder="örn: 9f86d081884c7d659a2feaa0c55ad015..."
@@ -202,7 +177,6 @@ const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSigna
           <label>Maskeli Lehtar Adı (Demo)</label>
           <input
             type="text"
-            className={demoActiveField === 'maskedName' ? 'demo-typing' : ''}
             value={maskedName}
             onChange={(e) => setMaskedName(e.target.value)}
             placeholder="örn: Ahmet Y."
@@ -212,7 +186,7 @@ const CreateCheque = ({ account, isDeployed, demoPrefill = null, demoSubmitSigna
 
         <button
           type="submit"
-          className={`btn btn-primary ${demoHighlight === 'create-submit' ? 'demo-pulse' : ''}`}
+          className="btn btn-primary"
           disabled={isFormDisabled}
         >
           {isLoading ? 'İşleniyor...' : 'Çek Oluştur'}

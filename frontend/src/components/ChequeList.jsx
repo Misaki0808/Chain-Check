@@ -6,7 +6,7 @@ import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
 
-const ChequeList = ({ account, isDeployed, filterType = 'ceklerim', autoExpandId = null, refreshSignal = 0, demoHighlight = null, demoTransferTo = null }) => {
+const ChequeList = ({ account, isDeployed, filterType = 'ceklerim' }) => {
   const [cheques, setCheques] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -16,14 +16,7 @@ const ChequeList = ({ account, isDeployed, filterType = 'ceklerim', autoExpandId
     if (account && isConfigValid() && isDeployed) {
       fetchCheques();
     }
-  }, [account, isDeployed, filterType, refreshSignal]);
-
-  // Otomatik tanıtım: ilgili çeki otomatik aç
-  useEffect(() => {
-    if (autoExpandId && cheques.some((c) => c.id.toString() === autoExpandId.toString())) {
-      setExpandedChequeId(autoExpandId.toString());
-    }
-  }, [autoExpandId, cheques]);
+  }, [account, isDeployed, filterType]);
 
   const fetchCheques = async () => {
     // Trust the App-level isDeployed prop — WalletConnect already verified deployment.
@@ -141,8 +134,6 @@ const ChequeList = ({ account, isDeployed, filterType = 'ceklerim', autoExpandId
                     account={account}
                     onRefresh={fetchCheques}
                     isDeployed={isDeployed}
-                    demoHighlight={demoHighlight}
-                    demoTransferTo={demoTransferTo}
                   />
                 </div>
               )}

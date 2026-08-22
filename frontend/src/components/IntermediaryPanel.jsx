@@ -5,7 +5,7 @@ import { formatAmount, formatDate } from '../utils/formatters';
 import StatusBadge from './StatusBadge';
 import ChequeDetail from './ChequeDetail';
 
-const IntermediaryPanel = ({ account, isDeployed, autoExpandId = null, refreshSignal = 0, demoHighlight = null }) => {
+const IntermediaryPanel = ({ account, isDeployed }) => {
   const [pendingCheques, setPendingCheques] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,14 +20,7 @@ const IntermediaryPanel = ({ account, isDeployed, autoExpandId = null, refreshSi
     if (account && isConfigValid() && isIntermediary && isDeployed) {
       fetchPaymentRequests();
     }
-  }, [account, isIntermediary, isDeployed, refreshSignal]);
-
-  // Otomatik tanıtım: ilgili çeki otomatik aç
-  useEffect(() => {
-    if (autoExpandId && pendingCheques.some((c) => c.id.toString() === autoExpandId.toString())) {
-      setExpandedChequeId(autoExpandId.toString());
-    }
-  }, [autoExpandId, pendingCheques]);
+  }, [account, isIntermediary, isDeployed]);
 
   const fetchPaymentRequests = async () => {
     if (!isDeployed) return;
@@ -139,7 +132,6 @@ const IntermediaryPanel = ({ account, isDeployed, autoExpandId = null, refreshSi
                     account={account}
                     onRefresh={fetchPaymentRequests}
                     isDeployed={isDeployed}
-                    demoHighlight={demoHighlight}
                   />
                 </div>
               )}

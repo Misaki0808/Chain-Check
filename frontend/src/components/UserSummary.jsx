@@ -4,7 +4,7 @@ import { getActiveProvider } from '../utils/walletSession';
 import { formatAddress } from '../utils/formatAddress';
 import { formatAmount, formatDate } from '../utils/formatters';
 
-const UserSummary = ({ account, isDeployed, refreshSignal = 0 }) => {
+const UserSummary = ({ account, isDeployed }) => {
   const [metrics, setMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -14,7 +14,7 @@ const UserSummary = ({ account, isDeployed, refreshSignal = 0 }) => {
     if (account && isConfigValid() && isDeployed) {
       fetchSummary();
     }
-  }, [account, isDeployed, refreshSignal]);
+  }, [account, isDeployed]);
 
   const fetchSummary = async () => {
     try {
